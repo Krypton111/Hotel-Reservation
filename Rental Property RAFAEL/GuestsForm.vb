@@ -228,7 +228,7 @@ Public Class GuestsForm
                 formPanel,
                 "Guest ID",
                 20,
-                50,
+                75,
                 130,
                 True
             )
@@ -238,7 +238,7 @@ Public Class GuestsForm
                 formPanel,
                 "First Name",
                 170,
-                50,
+                75,
                 200,
                 False
             )
@@ -248,7 +248,7 @@ Public Class GuestsForm
                 formPanel,
                 "Last Name",
                 390,
-                50,
+                75,
                 200,
                 False
             )
@@ -258,7 +258,7 @@ Public Class GuestsForm
                 formPanel,
                 "Full Name",
                 610,
-                50,
+                75,
                 250,
                 True
             )
@@ -268,7 +268,7 @@ Public Class GuestsForm
                 formPanel,
                 "Contact Number",
                 880,
-                50,
+                75,
                 220,
                 False
             )
@@ -278,7 +278,7 @@ Public Class GuestsForm
                 formPanel,
                 "Email Address",
                 20,
-                115,
+                150,
                 300,
                 False
             )
@@ -288,7 +288,7 @@ Public Class GuestsForm
                 formPanel,
                 "Address",
                 340,
-                115,
+                150,
                 360,
                 False
             )
@@ -298,7 +298,7 @@ Public Class GuestsForm
                 formPanel,
                 "City",
                 720,
-                115,
+                150,
                 180,
                 False
             )
@@ -308,7 +308,7 @@ Public Class GuestsForm
                 formPanel,
                 "Country",
                 920,
-                115,
+                150,
                 180,
                 False
             )
@@ -596,7 +596,7 @@ Public Class GuestsForm
         guestLayout.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 100.0F))
         ' Reserve enough room for all guest input fields and action controls.
         ' The guest table receives only the remaining space below them.
-        guestLayout.RowStyles.Add(New RowStyle(SizeType.Absolute, 285.0F))
+        guestLayout.RowStyles.Add(New RowStyle(SizeType.Absolute, 325.0F))
         guestLayout.RowStyles.Add(New RowStyle(SizeType.Absolute, 50.0F))
         guestLayout.RowStyles.Add(New RowStyle(SizeType.Absolute, 50.0F))
         guestLayout.RowStyles.Add(New RowStyle(SizeType.Absolute, 35.0F))
