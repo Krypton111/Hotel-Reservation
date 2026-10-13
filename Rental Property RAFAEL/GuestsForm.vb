@@ -594,9 +594,9 @@ Public Class GuestsForm
         guestLayout.ColumnCount = 1
         guestLayout.RowCount = 5
         guestLayout.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 100.0F))
-        ' Reserve enough room for all guest input fields and action controls.
-        ' The guest table receives only the remaining space below them.
-        guestLayout.RowStyles.Add(New RowStyle(SizeType.Absolute, 375.0F))
+        ' Allocate 285px to the guest information section.
+        ' The guest table receives the additional space freed by this adjustment.
+        guestLayout.RowStyles.Add(New RowStyle(SizeType.Absolute, 285.0F))
         guestLayout.RowStyles.Add(New RowStyle(SizeType.Absolute, 50.0F))
         guestLayout.RowStyles.Add(New RowStyle(SizeType.Absolute, 50.0F))
         guestLayout.RowStyles.Add(New RowStyle(SizeType.Absolute, 35.0F))
