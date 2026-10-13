@@ -289,11 +289,11 @@ Public Class RoomsForm
         formPanel.BorderStyle =
             BorderStyle.FixedSingle
 
-        formPanel.AutoScroll = True
-
         contentPanel.Controls.Add(
             formPanel
         )
+
+        contentPanel.Controls.SetChildIndex(formPanel, 0)
 
         BuildRoomFields()
 
@@ -364,6 +364,8 @@ Public Class RoomsForm
 
         txtRoomNumber.Size =
             New Size(145, 30)
+
+        txtRoomNumber.TabIndex = 1
 
         txtRoomNumber.MaxLength =
             20
@@ -912,6 +914,10 @@ Public Class RoomsForm
                 table
 
             FormatGrid()
+
+            If dgvRooms.Rows.Count > 0 Then
+                dgvRooms.FirstDisplayedScrollingRowIndex = 0
+            End If
 
         Catch ex As Exception
 
@@ -1855,6 +1861,10 @@ Public Class RoomsForm
                 table
 
             FormatGrid()
+
+            If dgvRooms.Rows.Count > 0 Then
+                dgvRooms.FirstDisplayedScrollingRowIndex = 0
+            End If
 
 
         Catch ex As Exception
