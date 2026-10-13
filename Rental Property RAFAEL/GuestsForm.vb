@@ -23,7 +23,7 @@ Public Class GuestsForm
 
     Private btnAdd As Button
     Private btnUpdate As Button
-    Private btnDelete As Button
+    Private btnArchive As Button
     Private btnViewArchived As Button
     Private viewingArchived As Boolean = False
     Private btnClear As Button
@@ -367,7 +367,7 @@ Public Class GuestsForm
             btnUpdate
         )
 
-        btnDelete =
+        btnArchive =
             CreateActionButton(
                 "ARCHIVE",
                 260,
@@ -380,7 +380,7 @@ Public Class GuestsForm
             )
 
         buttonPanel.Controls.Add(
-            btnDelete
+            btnArchive
         )
 
         btnClear =
@@ -590,8 +590,8 @@ Public Class GuestsForm
         AddHandler btnUpdate.Click,
             AddressOf UpdateGuest
 
-        AddHandler btnDelete.Click,
-            AddressOf DeleteGuest
+        AddHandler btnArchive.Click,
+            AddressOf ArchiveGuest
 
         AddHandler btnViewArchived.Click,
             AddressOf ToggleArchivedGuests
@@ -1276,10 +1276,10 @@ Public Class GuestsForm
     End Sub
 
     '==========================================================
-    ' DELETE GUEST
+    ' ARCHIVE GUEST
     '==========================================================
 
-    Private Sub DeleteGuest(
+    Private Sub ArchiveGuest(
         sender As Object,
         e As EventArgs
     )
@@ -1360,7 +1360,7 @@ Public Class GuestsForm
 
         viewingArchived = Not viewingArchived
         btnViewArchived.Text = If(viewingArchived, "SHOW ACTIVE", "SHOW ARCHIVED")
-        btnDelete.Text = If(viewingArchived, "RESTORE", "ARCHIVE")
+        btnArchive.Text = If(viewingArchived, "RESTORE", "ARCHIVE")
         btnAdd.Enabled = Not viewingArchived
         btnUpdate.Enabled = Not viewingArchived
 
