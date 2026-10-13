@@ -2111,7 +2111,8 @@ Public Class PaymentsForm
         Dim sql As String =
             "SELECT ISNULL(SUM(PaymentAmount), 0) " &
             "FROM Payments " &
-            "WHERE ReservationID = @ReservationID"
+            "WHERE ReservationID = @ReservationID " &
+            "AND IsArchived = 0"
 
 
         Using command As New SqlCommand(
