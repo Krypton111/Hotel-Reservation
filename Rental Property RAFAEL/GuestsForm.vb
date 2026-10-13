@@ -1199,7 +1199,7 @@ Public Class GuestsForm
                     "UPDATE Guests SET " &
                     "FirstName = @FirstName, " &
                     "LastName = @LastName, " &
-                    "ContactNumber = @ContactNumber, "
+                    "ContactNumber = @ContactNumber, " &
                     "Email = @Email, " &
                     "Address = @Address, " &
                     "City = @City, " &
