@@ -24,6 +24,8 @@ Public Class GuestsForm
     Private btnAdd As Button
     Private btnUpdate As Button
     Private btnDelete As Button
+    Private btnViewArchived As Button
+    Private viewingArchived As Boolean = False
     Private btnClear As Button
     Private btnSearch As Button
     Private btnClose As Button
@@ -367,7 +369,7 @@ Public Class GuestsForm
 
         btnDelete =
             CreateActionButton(
-                "DELETE",
+                "ARCHIVE",
                 260,
                 Color.FromArgb(
                     120,
@@ -408,6 +410,15 @@ Public Class GuestsForm
         buttonPanel.Controls.Add(
             btnClose
         )
+
+        btnViewArchived = CreateActionButton(
+            "SHOW ARCHIVED",
+            625,
+            Color.FromArgb(84, 88, 96),
+            Color.White
+        )
+        btnViewArchived.Size = New Size(160, 38)
+        buttonPanel.Controls.Add(btnViewArchived)
 
         '======================================================
         ' SEARCH PANEL
@@ -581,6 +592,9 @@ Public Class GuestsForm
 
         AddHandler btnDelete.Click,
             AddressOf DeleteGuest
+
+        AddHandler btnViewArchived.Click,
+            AddressOf ToggleArchivedGuests
 
         AddHandler btnClear.Click,
             AddressOf ClearButton_Click
@@ -866,6 +880,7 @@ Public Class GuestsForm
                     "City, " &
                     "Country " &
                     "FROM Guests " &
+                    "WHERE IsArchived = " & If(viewingArchived, "1", "0") & " " &
                     "ORDER BY GuestID DESC"
 
                 Using adapter As New SqlDataAdapter(
@@ -995,6 +1010,11 @@ Public Class GuestsForm
         sender As Object,
         e As EventArgs
     )
+
+        If viewingArchived Then
+            MessageBox.Show("Switch to active guests before adding a guest.", "Archive View", MessageBoxButtons.OK, MessageBoxIcon.Information)
+            Return
+        End If
 
         If Not ValidateFields() Then
 
@@ -1171,6 +1191,11 @@ Public Class GuestsForm
         e As EventArgs
     )
 
+        If viewingArchived Then
+            MessageBox.Show("Restore this guest before editing it.", "Archive View", MessageBoxButtons.OK, MessageBoxIcon.Information)
+            Return
+        End If
+
         If selectedGuestID <= 0 Then
 
             MessageBox.Show(
@@ -1262,107 +1287,51 @@ Public Class GuestsForm
         If selectedGuestID <= 0 Then
             MessageBox.Show(
                 "Please select a guest from the table first.",
-                "Delete Guest",
+                If(viewingArchived, "Restore Guest", "Archive Guest"),
                 MessageBoxButtons.OK,
                 MessageBoxIcon.Warning
             )
             Return
         End If
 
+        Dim actionText As String = If(viewingArchived, "restore", "archive")
+        Dim result As DialogResult = MessageBox.Show(
+            "Are you sure you want to " & actionText & " guest " & txtFullName.Text.Trim() & "?" &
+            Environment.NewLine & Environment.NewLine &
+            "Archived records are retained and can be restored later.",
+            "Confirm " & If(viewingArchived, "Restore", "Archive"),
+            MessageBoxButtons.YesNo,
+            MessageBoxIcon.Question
+        )
+
+        If result <> DialogResult.Yes Then Return
+
         Try
             Using connection As SqlConnection = DatabaseHelper.GetConnection()
                 connection.Open()
 
-                Dim reservationCount As Integer
-                Dim paymentCount As Integer
+                Dim sql As String =
+                    "UPDATE Guests SET IsArchived = @IsArchived, " &
+                    "ArchivedAt = CASE WHEN @IsArchived = 1 THEN SYSDATETIME() ELSE NULL END " &
+                    "WHERE GuestID = @GuestID"
 
-                Using command As New SqlCommand(
-                    "SELECT COUNT(*) FROM Reservations WHERE GuestID = @GuestID",
-                    connection
-                )
+                Using command As New SqlCommand(sql, connection)
+                    command.Parameters.Add("@IsArchived", SqlDbType.Bit).Value = Not viewingArchived
                     command.Parameters.Add("@GuestID", SqlDbType.Int).Value = selectedGuestID
-                    reservationCount = Convert.ToInt32(command.ExecuteScalar())
-                End Using
 
-                Using command As New SqlCommand(
-                    "SELECT COUNT(*) FROM Payments p " &
-                    "INNER JOIN Reservations r ON r.ReservationID = p.ReservationID " &
-                    "WHERE r.GuestID = @GuestID",
-                    connection
-                )
-                    command.Parameters.Add("@GuestID", SqlDbType.Int).Value = selectedGuestID
-                    paymentCount = Convert.ToInt32(command.ExecuteScalar())
-                End Using
-
-                Dim confirmation As String =
-                    "Are you sure you want to delete guest " & txtFullName.Text.Trim() & "?"
-
-                If reservationCount > 0 OrElse paymentCount > 0 Then
-                    confirmation =
-                        "Deleting guest " & txtFullName.Text.Trim() & " will also permanently delete " &
-                        reservationCount.ToString() & " reservation(s) and " &
-                        paymentCount.ToString() & " payment record(s)." &
-                        Environment.NewLine & Environment.NewLine &
-                        "This action cannot be undone. Continue?"
-                End If
-
-                If MessageBox.Show(
-                    confirmation,
-                    "Confirm Guest Deletion",
-                    MessageBoxButtons.YesNo,
-                    MessageBoxIcon.Warning
-                ) <> DialogResult.Yes Then
-                    Return
-                End If
-
-                Using transaction = connection.BeginTransaction()
-                    Try
-                        Using command As New SqlCommand(
-                            "DELETE p FROM Payments AS p " &
-                            "INNER JOIN Reservations AS r ON r.ReservationID = p.ReservationID " &
-                            "WHERE r.GuestID = @GuestID",
-                            connection,
-                            transaction
-                        )
-                            command.Parameters.Add("@GuestID", SqlDbType.Int).Value = selectedGuestID
-                            command.ExecuteNonQuery()
-                        End Using
-
-                        Using command As New SqlCommand(
-                            "DELETE FROM Reservations WHERE GuestID = @GuestID",
-                            connection,
-                            transaction
-                        )
-                            command.Parameters.Add("@GuestID", SqlDbType.Int).Value = selectedGuestID
-                            command.ExecuteNonQuery()
-                        End Using
-
-                        Using command As New SqlCommand(
-                            "DELETE FROM Guests WHERE GuestID = @GuestID",
-                            connection,
-                            transaction
-                        )
-                            command.Parameters.Add("@GuestID", SqlDbType.Int).Value = selectedGuestID
-                            If command.ExecuteNonQuery() <> 1 Then
-                                Throw New InvalidOperationException("The guest record could not be found.")
-                            End If
-                        End Using
-
-                        transaction.Commit()
-                    Catch
-                        transaction.Rollback()
-                        Throw
-                    End Try
+                    If command.ExecuteNonQuery() <> 1 Then
+                        Throw New InvalidOperationException("The guest record was not found.")
+                    End If
                 End Using
             End Using
 
             AuditLogger.Log(
-                "Deleted guest",
-                "Deleted guest record and associated reservation/payment records where present."
+                If(viewingArchived, "Restored guest", "Archived guest"),
+                If(viewingArchived, "Restored a guest record.", "Archived a guest record without deleting linked reservations or payments.")
             )
 
             MessageBox.Show(
-                "Guest deleted successfully.",
+                If(viewingArchived, "Guest restored successfully.", "Guest archived successfully."),
                 "Aurelia Grand Hotel",
                 MessageBoxButtons.OK,
                 MessageBoxIcon.Information
@@ -1374,6 +1343,20 @@ Public Class GuestsForm
         Catch ex As Exception
             ShowDatabaseError(ex)
         End Try
+
+    End Sub
+
+    Private Sub ToggleArchivedGuests(sender As Object, e As EventArgs)
+
+        viewingArchived = Not viewingArchived
+        btnViewArchived.Text = If(viewingArchived, "SHOW ACTIVE", "SHOW ARCHIVED")
+        btnDelete.Text = If(viewingArchived, "RESTORE", "ARCHIVE")
+        btnAdd.Enabled = Not viewingArchived
+        btnUpdate.Enabled = Not viewingArchived
+
+        txtSearch.Clear()
+        LoadGuests()
+        ClearFields()
 
     End Sub
 
@@ -1460,12 +1443,12 @@ Public Class GuestsForm
                     "City, " &
                     "Country " &
                     "FROM Guests " &
-                    "WHERE " &
-                    "FullName LIKE @Search " &
+                    "WHERE IsArchived = " & If(viewingArchived, "1", "0") & " " &
+                    "AND (FullName LIKE @Search " &
                     "OR FirstName LIKE @Search " &
                     "OR LastName LIKE @Search " &
                     "OR ContactNumber LIKE @Search " &
-                    "OR Email LIKE @Search " &
+                    "OR Email LIKE @Search) " &
                     "ORDER BY GuestID DESC"
 
                 Using adapter As New SqlDataAdapter(
