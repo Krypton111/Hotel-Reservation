@@ -273,15 +273,16 @@ Public Class UserManagementForm
                 connection.Open()
                 Dim sql As String
                 If creating Then
-                    sql = "INSERT INTO Users (Username, FullName, PasswordHash, RoleName, IsActive) VALUES (@Username, @FullName, @PasswordHash, @RoleName, @IsActive)"
+                    sql = "INSERT INTO Users (Username, FullName, Role, RoleName, PasswordHash, IsActive) VALUES (@Username, @FullName, @Role, @RoleName, @PasswordHash, @IsActive)"
                 Else
-                    sql = "UPDATE Users SET Username=@Username, FullName=@FullName, RoleName=@RoleName, IsActive=@IsActive"
+                    sql = "UPDATE Users SET Username=@Username, FullName=@FullName, Role=@Role, RoleName=@RoleName, IsActive=@IsActive"
                     If Not String.IsNullOrWhiteSpace(txtPassword.Text) Then sql &= ", PasswordHash=@PasswordHash"
                     sql &= " WHERE UserID=@UserID"
                 End If
                 Using command As New SqlCommand(sql, connection)
                     command.Parameters.Add("@Username", SqlDbType.NVarChar, 50).Value = txtUsername.Text.Trim()
                     command.Parameters.Add("@FullName", SqlDbType.NVarChar, 150).Value = txtFullName.Text.Trim()
+                    command.Parameters.Add("@Role", SqlDbType.NVarChar, 30).Value = cmbRole.Text
                     command.Parameters.Add("@RoleName", SqlDbType.NVarChar, 50).Value = cmbRole.Text
                     command.Parameters.Add("@IsActive", SqlDbType.Bit).Value = chkActive.Checked
                     If creating OrElse Not String.IsNullOrWhiteSpace(txtPassword.Text) Then command.Parameters.Add("@PasswordHash", SqlDbType.NVarChar, 64).Value = HashPassword(txtPassword.Text)
