@@ -1822,7 +1822,7 @@ Public Class MainForm
         Try
 
             Dim sql As String =
-                "SELECT COUNT(*) FROM Rooms"
+                "SELECT COUNT(*) FROM Rooms WHERE IsArchived = 0"
 
 
             Using connection =
@@ -1866,7 +1866,7 @@ Public Class MainForm
             Dim sql As String =
                 "SELECT COUNT(*) " &
                 "FROM Rooms " &
-                "WHERE Status = @Status"
+                "WHERE Status = @Status AND IsArchived = 0"
 
 
             Using connection =
@@ -1914,7 +1914,7 @@ Public Class MainForm
             Dim sql As String =
                 "SELECT COUNT(*) " &
                 "FROM Reservations " &
-                "WHERE ReservationStatus <> 'Cancelled'"
+                "WHERE ReservationStatus <> 'Cancelled' AND IsArchived = 0"
 
 
             Using connection =
@@ -1956,7 +1956,8 @@ Public Class MainForm
             Dim sql As String =
                 "SELECT COUNT(*) " &
                 "FROM Reservations " &
-                "WHERE CAST(CheckInDate AS DATE) = CAST(GETDATE() AS DATE) " &
+                "WHERE IsArchived = 0 " &
+                "AND CAST(CheckInDate AS DATE) = CAST(GETDATE() AS DATE) " &
                 "AND ReservationStatus IN " &
                 "('Reserved', 'Checked-In')"
 
@@ -2000,7 +2001,8 @@ Public Class MainForm
             Dim sql As String =
                 "SELECT COUNT(*) " &
                 "FROM Reservations " &
-                "WHERE CAST(CheckOutDate AS DATE) = CAST(GETDATE() AS DATE) " &
+                "WHERE IsArchived = 0 " &
+                "AND CAST(CheckOutDate AS DATE) = CAST(GETDATE() AS DATE) " &
                 "AND ReservationStatus = 'Checked-In'"
 
 
