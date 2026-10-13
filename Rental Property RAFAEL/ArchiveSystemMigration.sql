@@ -74,3 +74,104 @@ UNION ALL SELECT N'Reservations', COUNT(*) FROM dbo.Reservations WHERE IsArchive
 UNION ALL SELECT N'Payments', COUNT(*) FROM dbo.Payments WHERE IsArchived = 0
 UNION ALL SELECT N'Users', COUNT(*) FROM dbo.Users WHERE IsArchived = 0;
 GO
+
+/*
+    Refresh reporting views so archived records do not appear in active reports.
+    Archived rows remain in their base tables and can be restored by the app.
+*/
+GO
+CREATE OR ALTER VIEW dbo.vw_ReservationReport AS
+SELECT
+    r.ReservationID, r.ReferenceNumber, g.GuestID, g.FullName AS GuestName,
+    g.ContactNumber, g.Email, rm.RoomID, rm.RoomNumber, rm.RoomType,
+    r.CheckInDate, r.CheckOutDate, r.NumberOfNights, r.NumberOfGuests,
+    r.RoomRate, r.TotalAmount, r.ReservationStatus, r.PaymentStatus,
+    r.BookingDate, r.SpecialRequests, r.Notes,
+    u.FullName AS CreatedBy
+FROM dbo.Reservations r
+INNER JOIN dbo.Guests g ON r.GuestID = g.GuestID
+INNER JOIN dbo.Rooms rm ON r.RoomID = rm.RoomID
+LEFT JOIN dbo.Users u ON r.CreatedByUserID = u.UserID
+WHERE r.IsArchived = 0;
+GO
+
+CREATE OR ALTER VIEW dbo.vw_GuestReport AS
+SELECT
+    g.GuestID, g.FullName, g.ContactNumber, g.Email, g.City, g.Country,
+    COUNT(r.ReservationID) AS ReservationCount,
+    COALESCE(SUM(CASE WHEN r.ReservationStatus <> 'Cancelled' THEN r.TotalAmount ELSE 0 END), 0) AS TotalReservationValue
+FROM dbo.Guests g
+LEFT JOIN dbo.Reservations r ON g.GuestID = r.GuestID AND r.IsArchived = 0
+WHERE g.IsArchived = 0
+GROUP BY g.GuestID, g.FullName, g.ContactNumber, g.Email, g.City, g.Country;
+GO
+
+CREATE OR ALTER VIEW dbo.vw_PaymentReport AS
+SELECT
+    p.PaymentID, p.PaymentDate, p.PaymentAmount, p.PaymentMethod, p.PaymentStatus,
+    p.ReferenceNumber AS PaymentReference,
+    r.ReservationID, r.ReferenceNumber AS ReservationReference,
+    g.FullName AS GuestName, rm.RoomNumber
+FROM dbo.Payments p
+INNER JOIN dbo.Reservations r ON p.ReservationID = r.ReservationID
+INNER JOIN dbo.Guests g ON r.GuestID = g.GuestID
+INNER JOIN dbo.Rooms rm ON r.RoomID = rm.RoomID
+WHERE p.IsArchived = 0;
+GO
+
+CREATE OR ALTER VIEW dbo.vw_RoomReport AS
+SELECT
+    rm.RoomID, rm.RoomNumber, rm.RoomType, rm.FloorNumber, rm.FloorNumber AS Floor,
+    rm.Capacity, rm.BedType, rm.RatePerNight, rm.Status, rm.Description,
+    COUNT(r.ReservationID) AS ReservationCount
+FROM dbo.Rooms rm
+LEFT JOIN dbo.Reservations r ON rm.RoomID = r.RoomID AND r.IsArchived = 0
+WHERE rm.IsArchived = 0
+GROUP BY rm.RoomID, rm.RoomNumber, rm.RoomType, rm.FloorNumber, rm.Capacity,
+         rm.BedType, rm.RatePerNight, rm.Status, rm.Description;
+GO
+
+CREATE OR ALTER VIEW dbo.vw_RoomSummary AS
+SELECT
+    COUNT(*) AS TotalRooms,
+    SUM(CASE WHEN Status = 'Available' THEN 1 ELSE 0 END) AS AvailableRooms,
+    SUM(CASE WHEN Status = 'Occupied' THEN 1 ELSE 0 END) AS OccupiedRooms,
+    SUM(CASE WHEN Status = 'Reserved' THEN 1 ELSE 0 END) AS ReservedRooms,
+    SUM(CASE WHEN Status = 'Maintenance' THEN 1 ELSE 0 END) AS MaintenanceRooms
+FROM dbo.Rooms
+WHERE IsArchived = 0;
+GO
+
+CREATE OR ALTER VIEW dbo.vw_TodaysCheckIns AS
+SELECT r.ReservationID, r.ReferenceNumber, g.FullName AS GuestName,
+       rm.RoomNumber, rm.RoomType, r.CheckInDate, r.CheckOutDate,
+       r.NumberOfGuests, r.TotalAmount, r.ReservationStatus
+FROM dbo.Reservations r
+JOIN dbo.Guests g ON r.GuestID = g.GuestID
+JOIN dbo.Rooms rm ON r.RoomID = rm.RoomID
+WHERE r.IsArchived = 0
+  AND r.CheckInDate = CONVERT(date, GETDATE())
+  AND r.ReservationStatus IN ('Reserved', 'Checked-In');
+GO
+
+CREATE OR ALTER VIEW dbo.vw_TodaysCheckOuts AS
+SELECT r.ReservationID, r.ReferenceNumber, g.FullName AS GuestName,
+       rm.RoomNumber, rm.RoomType, r.CheckInDate, r.CheckOutDate,
+       r.NumberOfGuests, r.TotalAmount, r.ReservationStatus
+FROM dbo.Reservations r
+JOIN dbo.Guests g ON r.GuestID = g.GuestID
+JOIN dbo.Rooms rm ON r.RoomID = rm.RoomID
+WHERE r.IsArchived = 0
+  AND r.CheckOutDate = CONVERT(date, GETDATE())
+  AND r.ReservationStatus = 'Checked-In';
+GO
+
+CREATE OR ALTER VIEW dbo.vw_RevenueSummary AS
+SELECT
+    YEAR(p.PaymentDate) AS PaymentYear,
+    MONTH(p.PaymentDate) AS PaymentMonth,
+    SUM(p.PaymentAmount) AS TotalPayments
+FROM dbo.Payments p
+WHERE p.IsArchived = 0
+GROUP BY YEAR(p.PaymentDate), MONTH(p.PaymentDate);
+GO
