@@ -1260,75 +1260,106 @@ Public Class GuestsForm
     )
 
         If selectedGuestID <= 0 Then
-
             MessageBox.Show(
                 "Please select a guest from the table first.",
                 "Delete Guest",
                 MessageBoxButtons.OK,
                 MessageBoxIcon.Warning
             )
-
             Return
-
-        End If
-
-        If GuestHasReservations(
-            selectedGuestID
-        ) Then
-
-            MessageBox.Show(
-                "This guest cannot be deleted because reservation records are associated with the guest.",
-                "Delete Guest",
-                MessageBoxButtons.OK,
-                MessageBoxIcon.Warning
-            )
-
-            Return
-
-        End If
-
-        Dim result As DialogResult =
-            MessageBox.Show(
-                "Are you sure you want to delete " &
-                txtFullName.Text &
-                "?",
-                "Delete Guest",
-                MessageBoxButtons.YesNo,
-                MessageBoxIcon.Question
-            )
-
-        If result <> DialogResult.Yes Then
-
-            Return
-
         End If
 
         Try
+            Using connection As SqlConnection = DatabaseHelper.GetConnection()
+                connection.Open()
 
-            Using connection As SqlConnection =
-                DatabaseHelper.GetConnection()
+                Dim reservationCount As Integer
+                Dim paymentCount As Integer
 
                 Using command As New SqlCommand(
-                    "DELETE FROM Guests " &
-                    "WHERE GuestID = @GuestID",
+                    "SELECT COUNT(*) FROM Reservations WHERE GuestID = @GuestID",
                     connection
                 )
-
-                    command.Parameters.Add(
-                        "@GuestID",
-                        SqlDbType.Int
-                    ).Value =
-                        selectedGuestID
-
-                    connection.Open()
-
-                    command.ExecuteNonQuery()
-                    AuditLogger.Log("Changed guest data", "A guest record was created, updated, or otherwise changed.")
-                    
-
+                    command.Parameters.Add("@GuestID", SqlDbType.Int).Value = selectedGuestID
+                    reservationCount = Convert.ToInt32(command.ExecuteScalar())
                 End Using
 
+                Using command As New SqlCommand(
+                    "SELECT COUNT(*) FROM Payments p " &
+                    "INNER JOIN Reservations r ON r.ReservationID = p.ReservationID " &
+                    "WHERE r.GuestID = @GuestID",
+                    connection
+                )
+                    command.Parameters.Add("@GuestID", SqlDbType.Int).Value = selectedGuestID
+                    paymentCount = Convert.ToInt32(command.ExecuteScalar())
+                End Using
+
+                Dim confirmation As String =
+                    "Are you sure you want to delete guest " & txtFullName.Text.Trim() & "?"
+
+                If reservationCount > 0 OrElse paymentCount > 0 Then
+                    confirmation =
+                        "Deleting guest " & txtFullName.Text.Trim() & " will also permanently delete " &
+                        reservationCount.ToString() & " reservation(s) and " &
+                        paymentCount.ToString() & " payment record(s)." &
+                        Environment.NewLine & Environment.NewLine &
+                        "This action cannot be undone. Continue?"
+                End If
+
+                If MessageBox.Show(
+                    confirmation,
+                    "Confirm Guest Deletion",
+                    MessageBoxButtons.YesNo,
+                    MessageBoxIcon.Warning
+                ) <> DialogResult.Yes Then
+                    Return
+                End If
+
+                Using transaction = connection.BeginTransaction()
+                    Try
+                        Using command As New SqlCommand(
+                            "DELETE p FROM Payments AS p " &
+                            "INNER JOIN Reservations AS r ON r.ReservationID = p.ReservationID " &
+                            "WHERE r.GuestID = @GuestID",
+                            connection,
+                            transaction
+                        )
+                            command.Parameters.Add("@GuestID", SqlDbType.Int).Value = selectedGuestID
+                            command.ExecuteNonQuery()
+                        End Using
+
+                        Using command As New SqlCommand(
+                            "DELETE FROM Reservations WHERE GuestID = @GuestID",
+                            connection,
+                            transaction
+                        )
+                            command.Parameters.Add("@GuestID", SqlDbType.Int).Value = selectedGuestID
+                            command.ExecuteNonQuery()
+                        End Using
+
+                        Using command As New SqlCommand(
+                            "DELETE FROM Guests WHERE GuestID = @GuestID",
+                            connection,
+                            transaction
+                        )
+                            command.Parameters.Add("@GuestID", SqlDbType.Int).Value = selectedGuestID
+                            If command.ExecuteNonQuery() <> 1 Then
+                                Throw New InvalidOperationException("The guest record could not be found.")
+                            End If
+                        End Using
+
+                        transaction.Commit()
+                    Catch
+                        transaction.Rollback()
+                        Throw
+                    End Try
+                End Using
             End Using
+
+            AuditLogger.Log(
+                "Deleted guest",
+                "Deleted guest record and associated reservation/payment records where present."
+            )
 
             MessageBox.Show(
                 "Guest deleted successfully.",
@@ -1338,13 +1369,10 @@ Public Class GuestsForm
             )
 
             LoadGuests()
-
             ClearFields()
 
         Catch ex As Exception
-
             ShowDatabaseError(ex)
-
         End Try
 
     End Sub
