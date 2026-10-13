@@ -74,7 +74,7 @@ Public Class RoomsForm
 
     Private btnAdd As Button
     Private btnUpdate As Button
-    Private btnDelete As Button
+    Private btnArchive As Button
     Private btnViewArchived As Button
     Private viewingArchived As Boolean = False
     Private btnClear As Button
@@ -333,8 +333,8 @@ Public Class RoomsForm
         btnUpdate = CreateButton("Update", Point.Empty, New Size(90, 36), Navy)
         AddHandler btnUpdate.Click, AddressOf UpdateButton_Click
 
-        btnDelete = CreateButton("Archive", Point.Empty, New Size(90, 36), Color.FromArgb(116, 70, 65))
-        AddHandler btnDelete.Click, AddressOf DeleteButton_Click
+        btnArchive = CreateButton("Archive", Point.Empty, New Size(90, 36), Color.FromArgb(116, 70, 65))
+        AddHandler btnArchive.Click, AddressOf ArchiveButton_Click
 
         btnClear = CreateButton("Clear", Point.Empty, New Size(78, 36), Color.FromArgb(108, 105, 98))
         AddHandler btnClear.Click, AddressOf ClearButton_Click
@@ -352,7 +352,7 @@ Public Class RoomsForm
         AddHandler btnViewArchived.Click, AddressOf ToggleArchivedRooms
 
         actionsPanel.Controls.AddRange(New Control() {
-            btnAdd, btnUpdate, btnDelete, btnClear,
+            btnAdd, btnUpdate, btnArchive, btnClear,
             btnSearch, btnRefresh, btnClose, btnViewArchived
         })
 
@@ -965,10 +965,10 @@ Public Class RoomsForm
 
 
     '===========================================================
-    ' DELETE ROOM
+    ' ARCHIVE ROOM
     '===========================================================
 
-    Private Sub DeleteButton_Click(
+    Private Sub ArchiveButton_Click(
         sender As Object,
         e As EventArgs
     )
@@ -1053,7 +1053,7 @@ Public Class RoomsForm
 
         viewingArchived = Not viewingArchived
         btnViewArchived.Text = If(viewingArchived, "Show Active", "Show Archived")
-        btnDelete.Text = If(viewingArchived, "Restore", "Archive")
+        btnArchive.Text = If(viewingArchived, "Restore", "Archive")
         btnAdd.Enabled = Not viewingArchived
         btnUpdate.Enabled = Not viewingArchived
 
