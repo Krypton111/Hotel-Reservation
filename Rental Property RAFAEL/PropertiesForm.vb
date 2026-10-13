@@ -64,7 +64,7 @@ Public Class PropertiesForm
 
     Private btnAdd As Button
     Private btnUpdate As Button
-    Private btnDelete As Button
+    Private btnArchive As Button
     Private btnClear As Button
     Private btnViewArchived As Button
     Private viewingArchived As Boolean = False
@@ -632,7 +632,7 @@ Public Class PropertiesForm
         formPanel.Controls.Add(btnUpdate)
 
 
-        btnDelete =
+        btnArchive =
             CreateButton(
                 "Archive",
                 New Point(880, 185),
@@ -644,7 +644,7 @@ Public Class PropertiesForm
                 )
             )
 
-        formPanel.Controls.Add(btnDelete)
+        formPanel.Controls.Add(btnArchive)
 
 
         btnClear =
@@ -664,7 +664,7 @@ Public Class PropertiesForm
         AddHandler btnUpdate.Click,
             AddressOf UpdatePropertyClicked
 
-        AddHandler btnDelete.Click,
+        AddHandler btnArchive.Click,
             AddressOf ArchivePropertyClicked
 
         AddHandler btnClear.Click,
@@ -1359,7 +1359,7 @@ Public Class PropertiesForm
 
 
     '==========================================================
-    ' DELETE PROPERTY
+    ' ARCHIVE PROPERTY
     '==========================================================
 
     Private Sub ArchivePropertyClicked(
@@ -1430,7 +1430,7 @@ Public Class PropertiesForm
 
         viewingArchived = Not viewingArchived
         btnViewArchived.Text = If(viewingArchived, "Show Active", "Show Archived")
-        btnDelete.Text = If(viewingArchived, "Restore", "Archive")
+        btnArchive.Text = If(viewingArchived, "Restore", "Archive")
         btnAdd.Enabled = Not viewingArchived
         btnUpdate.Enabled = Not viewingArchived
         txtSearch.Clear()
