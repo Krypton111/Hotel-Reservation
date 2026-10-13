@@ -123,7 +123,10 @@ FROM dbo.Payments p
 INNER JOIN dbo.Reservations r ON p.ReservationID = r.ReservationID
 INNER JOIN dbo.Guests g ON r.GuestID = g.GuestID
 INNER JOIN dbo.Rooms rm ON r.RoomID = rm.RoomID
-WHERE p.IsArchived = 0;
+WHERE p.IsArchived = 0
+  AND r.IsArchived = 0
+  AND g.IsArchived = 0
+  AND rm.IsArchived = 0;
 GO
 
 CREATE OR ALTER VIEW dbo.vw_RoomReport AS
