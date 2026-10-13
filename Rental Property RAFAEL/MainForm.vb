@@ -10,6 +10,7 @@ Public Class MainForm
     ' MAIN LAYOUT
     '===========================================================
 
+    Private pnlLayoutHost As TableLayoutPanel
     Private pnlNavigation As Panel
     Private pnlContent As Panel
     Private pnlPageHeader As Panel
@@ -111,19 +112,47 @@ Public Class MainForm
 
 
         '=======================================================
-        ' MAIN CONTENT
+        ' MAIN LAYOUT - SIDEBAR AND CONTENT IN SEPARATE COLUMNS
         '=======================================================
 
-        pnlContent = New Panel()
+        'A TableLayoutPanel reserves space for the sidebar instead
+        'of allowing the sidebar and content panels to overlap.
+        pnlLayoutHost = New TableLayoutPanel()
 
-        pnlContent.Dock =
+        pnlLayoutHost.Dock =
             DockStyle.Fill
 
-        pnlContent.BackColor =
-            Ivory
+        pnlLayoutHost.Margin =
+            New Padding(0)
 
-        Me.Controls.Add(
-            pnlContent
+        pnlLayoutHost.Padding =
+            New Padding(0)
+
+        pnlLayoutHost.ColumnCount = 2
+        pnlLayoutHost.RowCount = 1
+
+        pnlLayoutHost.GrowStyle =
+            TableLayoutPanelGrowStyle.FixedSize
+
+        pnlLayoutHost.ColumnStyles.Add(
+            New ColumnStyle(
+                SizeType.Absolute,
+                245.0F
+            )
+        )
+
+        pnlLayoutHost.ColumnStyles.Add(
+            New ColumnStyle(
+                SizeType.Percent,
+                100.0F
+            )
+        )
+
+        pnlLayoutHost.RowStyles.Add(
+            New RowStyle(
+                SizeType.Percent,
+                100.0F
+            )
         )
 
 
@@ -134,19 +163,48 @@ Public Class MainForm
         pnlNavigation = New Panel()
 
         pnlNavigation.Dock =
-            DockStyle.Left
+            DockStyle.Fill
 
-        pnlNavigation.Width =
-            245
+        pnlNavigation.Margin =
+            New Padding(0)
 
         pnlNavigation.BackColor =
             DeepNavy
 
-        Me.Controls.Add(
-            pnlNavigation
+
+        '=======================================================
+        ' MAIN CONTENT
+        '=======================================================
+
+        pnlContent = New Panel()
+
+        pnlContent.Dock =
+            DockStyle.Fill
+
+        pnlContent.Margin =
+            New Padding(0)
+
+        pnlContent.BackColor =
+            Ivory
+
+
+        'Place each panel in its own column. Do not add them
+        'directly to the form or use BringToFront for layout.
+        pnlLayoutHost.Controls.Add(
+            pnlNavigation,
+            0,
+            0
         )
 
-        pnlNavigation.BringToFront()
+        pnlLayoutHost.Controls.Add(
+            pnlContent,
+            1,
+            0
+        )
+
+        Me.Controls.Add(
+            pnlLayoutHost
+        )
 
 
         '=======================================================
