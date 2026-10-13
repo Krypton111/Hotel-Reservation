@@ -1034,6 +1034,7 @@ Public Class GuestsForm
                     connection.Open()
 
                     command.ExecuteNonQuery()
+                    AuditLogger.Log("Changed guest data", "A guest record was created, updated, or otherwise changed.")
 
                 End Using
 
@@ -1232,6 +1233,7 @@ Public Class GuestsForm
                     connection.Open()
 
                     command.ExecuteNonQuery()
+                    AuditLogger.Log("Changed guest data", "A guest record was created, updated, or otherwise changed.")
 
                 End Using
 
@@ -1329,6 +1331,7 @@ Public Class GuestsForm
                     connection.Open()
 
                     command.ExecuteNonQuery()
+                    AuditLogger.Log("Changed guest data", "A guest record was created, updated, or otherwise changed.")
 
                 End Using
 
