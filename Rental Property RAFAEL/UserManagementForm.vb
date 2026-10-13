@@ -238,38 +238,49 @@ Public Class UserManagementForm
     End Sub
 
     Private Sub SaveUser(sender As Object, e As EventArgs)
-        If String.IsNullOrWhiteSpace(txtUserID.Text) Then
-            MessageBox.Show("Select an existing account to edit, or click New Account to create one.", "User Management", MessageBoxButtons.OK, MessageBoxIcon.Information)
-            Return
-        End If
+        Dim creating As Boolean = String.IsNullOrWhiteSpace(txtUserID.Text)
         If String.IsNullOrWhiteSpace(txtUsername.Text) OrElse String.IsNullOrWhiteSpace(txtFullName.Text) OrElse cmbRole.SelectedIndex < 0 Then
             MessageBox.Show("Username, full name, and role are required.", "Validation", MessageBoxButtons.OK, MessageBoxIcon.Warning)
             Return
         End If
-        Dim id = Convert.ToInt32(txtUserID.Text)
-        If id = LoginForm.LoggedInUserID AndAlso Not chkActive.Checked Then
+        If creating AndAlso String.IsNullOrWhiteSpace(txtPassword.Text) Then
+            MessageBox.Show("Enter an initial password for the new account.", "Validation", MessageBoxButtons.OK, MessageBoxIcon.Warning)
+            txtPassword.Focus()
+            Return
+        End If
+        Dim id As Integer = If(creating, 0, Convert.ToInt32(txtUserID.Text))
+        If Not creating AndAlso id = LoginForm.LoggedInUserID AndAlso Not chkActive.Checked Then
             MessageBox.Show("You cannot deactivate the account currently in use.", "User Management", MessageBoxButtons.OK, MessageBoxIcon.Warning)
             Return
         End If
         Try
             Using connection = DatabaseHelper.GetConnection()
                 connection.Open()
-                Dim sql = "UPDATE Users SET Username=@Username, FullName=@FullName, RoleName=@RoleName, IsActive=@IsActive"
-                If Not String.IsNullOrWhiteSpace(txtPassword.Text) Then sql &= ", PasswordHash=@PasswordHash"
-                sql &= " WHERE UserID=@UserID"
+                Dim sql As String
+                If creating Then
+                    sql = "INSERT INTO Users (Username, FullName, PasswordHash, RoleName, IsActive) VALUES (@Username, @FullName, @PasswordHash, @RoleName, @IsActive)"
+                Else
+                    sql = "UPDATE Users SET Username=@Username, FullName=@FullName, RoleName=@RoleName, IsActive=@IsActive"
+                    If Not String.IsNullOrWhiteSpace(txtPassword.Text) Then sql &= ", PasswordHash=@PasswordHash"
+                    sql &= " WHERE UserID=@UserID"
+                End If
                 Using command As New SqlCommand(sql, connection)
                     command.Parameters.Add("@Username", SqlDbType.NVarChar, 50).Value = txtUsername.Text.Trim()
                     command.Parameters.Add("@FullName", SqlDbType.NVarChar, 150).Value = txtFullName.Text.Trim()
                     command.Parameters.Add("@RoleName", SqlDbType.NVarChar, 50).Value = cmbRole.Text
                     command.Parameters.Add("@IsActive", SqlDbType.Bit).Value = chkActive.Checked
-                    command.Parameters.Add("@UserID", SqlDbType.Int).Value = id
-                    If Not String.IsNullOrWhiteSpace(txtPassword.Text) Then command.Parameters.Add("@PasswordHash", SqlDbType.NVarChar, 64).Value = HashPassword(txtPassword.Text)
+                    If creating OrElse Not String.IsNullOrWhiteSpace(txtPassword.Text) Then command.Parameters.Add("@PasswordHash", SqlDbType.NVarChar, 64).Value = HashPassword(txtPassword.Text)
+                    If Not creating Then command.Parameters.Add("@UserID", SqlDbType.Int).Value = id
                     command.ExecuteNonQuery()
                 End Using
             End Using
-            AuditLogger.Log("Updated user account", "UserID=" & id.ToString() & "; username=" & txtUsername.Text.Trim() & "; role=" & cmbRole.Text & "; active=" & chkActive.Checked.ToString())
-            If Not String.IsNullOrWhiteSpace(txtPassword.Text) Then AuditLogger.Log("Reset user password", "Password changed for UserID=" & id.ToString() & ". Password value was not recorded.")
-            MessageBox.Show("Account updated successfully.", "User Management", MessageBoxButtons.OK, MessageBoxIcon.Information)
+            If creating Then
+                AuditLogger.Log("Created user account", "Username=" & txtUsername.Text.Trim() & "; role=" & cmbRole.Text & "; active=" & chkActive.Checked.ToString())
+            Else
+                AuditLogger.Log("Updated user account", "UserID=" & id.ToString() & "; username=" & txtUsername.Text.Trim() & "; role=" & cmbRole.Text & "; active=" & chkActive.Checked.ToString())
+                If Not String.IsNullOrWhiteSpace(txtPassword.Text) Then AuditLogger.Log("Reset user password", "Password changed for UserID=" & id.ToString() & ". Password value was not recorded.")
+            End If
+            MessageBox.Show(If(creating, "Account created successfully.", "Account updated successfully."), "User Management", MessageBoxButtons.OK, MessageBoxIcon.Information)
             LoadUsers()
             ClearEditor()
         Catch ex As Exception
