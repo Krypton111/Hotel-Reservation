@@ -1744,6 +1744,7 @@ Public Class PaymentsForm
                     )
 
                     command.ExecuteNonQuery()
+                    AuditLogger.Log("Changed payment data", "A payment record was created, updated, or otherwise changed.")
 
                 End Using
 
@@ -1931,6 +1932,7 @@ Public Class PaymentsForm
                     )
 
                     command.ExecuteNonQuery()
+                    AuditLogger.Log("Changed payment data", "A payment record was created, updated, or otherwise changed.")
 
                 End Using
 
@@ -2045,6 +2047,7 @@ Public Class PaymentsForm
                     )
 
                     command.ExecuteNonQuery()
+                    AuditLogger.Log("Changed payment data", "A payment record was created, updated, or otherwise changed.")
 
                 End Using
 
@@ -2310,6 +2313,7 @@ Public Class PaymentsForm
             )
 
             command.ExecuteNonQuery()
+                    AuditLogger.Log("Changed payment data", "A payment record was created, updated, or otherwise changed.")
 
         End Using
 
