@@ -1294,6 +1294,16 @@ Public Class GuestsForm
             Return
         End If
 
+        If Not viewingArchived AndAlso GuestHasReservations(selectedGuestID) Then
+            MessageBox.Show(
+                "Archive this guest's reservations first. This prevents active reservations from being left linked to an archived guest.",
+                "Guest Has Reservations",
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Warning
+            )
+            Return
+        End If
+
         Dim actionText As String = If(viewingArchived, "restore", "archive")
         Dim result As DialogResult = MessageBox.Show(
             "Are you sure you want to " & actionText & " guest " & txtFullName.Text.Trim() & "?" &
@@ -1376,7 +1386,7 @@ Public Class GuestsForm
                 Using command As New SqlCommand(
                     "SELECT COUNT(*) " &
                     "FROM Reservations " &
-                    "WHERE GuestID = @GuestID",
+                    "WHERE GuestID = @GuestID AND IsArchived = 0",
                     connection
                 )
 
