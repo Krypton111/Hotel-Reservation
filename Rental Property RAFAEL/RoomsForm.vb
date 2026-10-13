@@ -239,16 +239,11 @@ Public Class RoomsForm
         formPanel.BorderStyle =
             BorderStyle.FixedSingle
 
-        contentPanel.Controls.Add(
-            formPanel
-        )
-
-
-        BuildRoomFields()
-
-
         '-------------------------------------------------------
         ' GRID PANEL
+        ' Add the fill-docked grid FIRST. WinForms docking follows
+        ' control z-order; adding it after the top panel can cause
+        ' the grid to occupy/cover the room editor area.
         '-------------------------------------------------------
 
         gridPanel = New Panel()
@@ -271,8 +266,36 @@ Public Class RoomsForm
             gridPanel
         )
 
-
         BuildGrid()
+
+
+        '-------------------------------------------------------
+        ' ROOM EDITOR
+        ' Add the top-docked editor LAST so it reserves its own
+        ' area above the grid instead of being overlapped.
+        '-------------------------------------------------------
+
+        formPanel = New Panel()
+
+        formPanel.Dock =
+            DockStyle.Top
+
+        formPanel.Height =
+            265
+
+        formPanel.BackColor =
+            WarmWhite
+
+        formPanel.BorderStyle =
+            BorderStyle.FixedSingle
+
+        formPanel.AutoScroll = True
+
+        contentPanel.Controls.Add(
+            formPanel
+        )
+
+        BuildRoomFields()
 
     End Sub
 
@@ -574,6 +597,9 @@ Public Class RoomsForm
                 1135,
                 55
             )
+
+        txtDescription.Anchor =
+            AnchorStyles.Top Or AnchorStyles.Left Or AnchorStyles.Right
 
         txtDescription.Multiline =
             True
@@ -985,6 +1011,15 @@ Public Class RoomsForm
 
         dgvRooms.RowTemplate.Height =
             35
+
+        dgvRooms.ScrollBars =
+            ScrollBars.Both
+
+        dgvRooms.AutoSizeRowsMode =
+            DataGridViewAutoSizeRowsMode.None
+
+        dgvRooms.AllowUserToResizeRows =
+            False
 
         AddHandler dgvRooms.CellClick,
             AddressOf dgvRooms_CellClick
