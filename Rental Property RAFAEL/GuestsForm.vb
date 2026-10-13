@@ -206,7 +206,7 @@ Public Class GuestsForm
             DockStyle.Top
 
         formPanel.Height =
-            240
+            285
 
         formPanel.BackColor =
             WarmWhite
@@ -220,7 +220,7 @@ Public Class GuestsForm
             formPanel,
             "GUEST INFORMATION",
             20,
-            15
+            24
         )
 
         txtGuestID =
