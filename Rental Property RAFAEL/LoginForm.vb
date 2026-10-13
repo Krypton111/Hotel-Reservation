@@ -509,7 +509,8 @@ Public Class LoginForm
                 "FROM Users " &
                 "WHERE Username = @Username " &
                 "AND PasswordHash = @PasswordHash " &
-                "AND IsActive = 1"
+                "AND IsActive = 1 " &
+                "AND IsArchived = 0"
 
 
             Using conn As SqlConnection =
