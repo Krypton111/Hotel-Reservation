@@ -1152,6 +1152,7 @@ Public Class RoomsForm
                     AddRoomParameters(command)
 
                     command.ExecuteNonQuery()
+                    AuditLogger.Log("Changed room data", "A room record was created, updated, or otherwise changed.")
 
                 End Using
 
@@ -1264,6 +1265,7 @@ Public Class RoomsForm
                     )
 
                     command.ExecuteNonQuery()
+                    AuditLogger.Log("Changed room data", "A room record was created, updated, or otherwise changed.")
 
                 End Using
 
@@ -1380,6 +1382,7 @@ Public Class RoomsForm
                     )
 
                     command.ExecuteNonQuery()
+                    AuditLogger.Log("Changed room data", "A room record was created, updated, or otherwise changed.")
 
                 End Using
 
