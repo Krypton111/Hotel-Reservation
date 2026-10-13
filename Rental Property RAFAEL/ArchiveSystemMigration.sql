@@ -65,6 +65,12 @@ BEGIN
         EXEC(N'ALTER TABLE dbo.Properties ADD IsArchived BIT NOT NULL CONSTRAINT DF_Properties_IsArchived DEFAULT (0) WITH VALUES;');
     IF COL_LENGTH(N'dbo.Properties', N'ArchivedAt') IS NULL
         ALTER TABLE dbo.Properties ADD ArchivedAt DATETIME2(0) NULL;
+
+    IF COL_LENGTH(N'dbo.Properties', N'IsActive') IS NOT NULL
+        UPDATE dbo.Properties
+        SET IsArchived = 1,
+            ArchivedAt = COALESCE(ArchivedAt, SYSDATETIME())
+        WHERE IsActive = 0 AND IsArchived = 0;
 END;
 GO
 
