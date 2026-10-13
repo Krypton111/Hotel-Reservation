@@ -567,6 +567,7 @@ Public Class LoginForm
                                     "RoleName"
                                 ).ToString()
 
+                            AuditLogger.Log("Logged in", "Successful sign-in.")
 
                             MessageBox.Show(
                                 "Welcome to Aurelia Grand Hotel, " &
