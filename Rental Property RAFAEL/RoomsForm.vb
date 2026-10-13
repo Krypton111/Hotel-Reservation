@@ -267,7 +267,7 @@ Public Class RoomsForm
             DockStyle.Top
 
         formPanel.Height =
-            265
+            315
 
         formPanel.BackColor =
             WarmWhite
@@ -282,6 +282,8 @@ Public Class RoomsForm
         )
 
         contentPanel.Controls.SetChildIndex(formPanel, 0)
+        formPanel.BringToFront()
+        formPanel.Visible = True
 
         BuildRoomFields()
 
@@ -569,7 +571,7 @@ Public Class RoomsForm
 
         descriptionLabel = CreateLabel(
             "Description",
-            New Point(25, 92)
+            New Point(25, 95)
         )
 
         formPanel.Controls.Add(
@@ -580,7 +582,7 @@ Public Class RoomsForm
         txtDescription = New TextBox()
 
         txtDescription.Location =
-            New Point(25, 119)
+            New Point(25, 120)
 
         txtDescription.Size =
             New Size(
@@ -611,7 +613,7 @@ Public Class RoomsForm
 
         searchLabel = CreateLabel(
             "Search Rooms",
-            New Point(25, 190)
+            New Point(25, 185)
         )
 
         formPanel.Controls.Add(
@@ -622,7 +624,7 @@ Public Class RoomsForm
         txtSearch = New TextBox()
 
         txtSearch.Location =
-            New Point(25, 217)
+            New Point(25, 210)
 
         txtSearch.Size =
             New Size(
@@ -644,7 +646,7 @@ Public Class RoomsForm
 
         btnAdd = CreateButton(
             "Add Room",
-            New Point(350, 210),
+            New Point(350, 205),
             New Size(110, 40),
             Color.FromArgb(
                 72,
@@ -663,7 +665,7 @@ Public Class RoomsForm
 
         btnUpdate = CreateButton(
             "Update",
-            New Point(470, 210),
+            New Point(470, 205),
             New Size(110, 40),
             Navy
         )
@@ -678,7 +680,7 @@ Public Class RoomsForm
 
         btnDelete = CreateButton(
             "Delete",
-            New Point(590, 210),
+            New Point(590, 205),
             New Size(110, 40),
             Color.FromArgb(
                 116,
@@ -697,7 +699,7 @@ Public Class RoomsForm
 
         btnClear = CreateButton(
             "Clear",
-            New Point(710, 210),
+            New Point(710, 205),
             New Size(100, 40),
             Color.FromArgb(
                 108,
@@ -716,7 +718,7 @@ Public Class RoomsForm
 
         btnSearch = CreateButton(
             "Search",
-            New Point(820, 210),
+            New Point(820, 205),
             New Size(100, 40),
             Color.FromArgb(
                 91,
@@ -735,7 +737,7 @@ Public Class RoomsForm
 
         btnRefresh = CreateButton(
             "Refresh",
-            New Point(930, 210),
+            New Point(930, 205),
             New Size(100, 40),
             Color.FromArgb(
                 69,
@@ -754,7 +756,7 @@ Public Class RoomsForm
 
         btnClose = CreateButton(
             "Close",
-            New Point(1040, 210),
+            New Point(1040, 205),
             New Size(100, 40),
             Color.FromArgb(
                 108,
