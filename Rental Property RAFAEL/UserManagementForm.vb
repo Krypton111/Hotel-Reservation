@@ -30,6 +30,10 @@ Public Class UserManagementForm
     Private dtFrom As DateTimePicker
     Private dtTo As DateTimePicker
     Private lblActivityCount As Label
+    Private btnSaveUser As Button
+    Private btnArchiveUser As Button
+    Private btnViewArchivedUsers As Button
+    Private viewingArchivedUsers As Boolean = False
 
     Public Sub New()
         If Not LoginForm.LoggedInRole.Equals("Admin", StringComparison.OrdinalIgnoreCase) Then
@@ -102,10 +106,10 @@ Public Class UserManagementForm
         chkActive = New CheckBox With {.Text = "Account is active", .Location = New Point(16, 348), .AutoSize = True, .Checked = True, .ForeColor = Charcoal}
         editor.Controls.Add(chkActive)
 
-        Dim btnSave As Button = AddButton(editor, "Save Changes", 16, 386, 130, 38, Navy)
+        btnSaveUser = AddButton(editor, "Save Changes", 16, 386, 130, 38, Navy)
         Dim btnNew As Button = AddButton(editor, "New Account", 156, 386, 130, 38, Color.FromArgb(122, 139, 114))
         Dim btnReset As Button = AddButton(editor, "Clear", 16, 432, 130, 34, Color.FromArgb(125, 125, 120))
-        AddHandler btnSave.Click, AddressOf SaveUser
+        AddHandler btnSaveUser.Click, AddressOf SaveUser
         AddHandler btnNew.Click, Sub() ClearEditor()
         AddHandler btnReset.Click, Sub() ClearEditor()
 
@@ -116,6 +120,12 @@ Public Class UserManagementForm
         accounts.Controls.Add(txtUserSearch)
         Dim btnRefresh As Button = AddButton(accounts, "Refresh", 282, 37, 90, 31, Navy)
         AddHandler btnRefresh.Click, Sub() LoadUsers()
+
+        btnArchiveUser = AddButton(accounts, "Archive", 380, 37, 90, 31, Color.FromArgb(116, 70, 65))
+        AddHandler btnArchiveUser.Click, AddressOf ArchiveSelectedUser
+
+        btnViewArchivedUsers = AddButton(accounts, "Show Archived", 478, 37, 130, 31, Color.FromArgb(84, 88, 96))
+        AddHandler btnViewArchivedUsers.Click, AddressOf ToggleArchivedUsers
         dgvUsers = MakeGrid()
         dgvUsers.Location = New Point(14, 78)
         dgvUsers.Anchor = AnchorStyles.Top Or AnchorStyles.Bottom Or AnchorStyles.Left Or AnchorStyles.Right
@@ -203,7 +213,7 @@ Public Class UserManagementForm
         Try
             Using connection = DatabaseHelper.GetConnection()
                 connection.Open()
-                Using adapter As New SqlDataAdapter("SELECT UserID, Username, FullName, RoleName, IsActive FROM Users ORDER BY UserID", connection)
+                Using adapter As New SqlDataAdapter("SELECT UserID, Username, FullName, RoleName, IsActive FROM Users WHERE IsArchived = " & If(viewingArchivedUsers, "1", "0") & " ORDER BY UserID", connection)
                     Dim table As New DataTable()
                     adapter.Fill(table)
                     dgvUsers.DataSource = table
@@ -238,6 +248,11 @@ Public Class UserManagementForm
     End Sub
 
     Private Sub SaveUser(sender As Object, e As EventArgs)
+        If viewingArchivedUsers Then
+            MessageBox.Show("Restore this account before editing it.", "Archive View", MessageBoxButtons.OK, MessageBoxIcon.Information)
+            Return
+        End If
+
         Dim creating As Boolean = String.IsNullOrWhiteSpace(txtUserID.Text)
         If String.IsNullOrWhiteSpace(txtUsername.Text) OrElse String.IsNullOrWhiteSpace(txtFullName.Text) OrElse cmbRole.SelectedIndex < 0 Then
             MessageBox.Show("Username, full name, and role are required.", "Validation", MessageBoxButtons.OK, MessageBoxIcon.Warning)
@@ -288,11 +303,67 @@ Public Class UserManagementForm
         End Try
     End Sub
 
+    Private Sub ToggleArchivedUsers(sender As Object, e As EventArgs)
+        viewingArchivedUsers = Not viewingArchivedUsers
+        btnViewArchivedUsers.Text = If(viewingArchivedUsers, "Show Active", "Show Archived")
+        btnArchiveUser.Text = If(viewingArchivedUsers, "Restore", "Archive")
+        btnSaveUser.Enabled = Not viewingArchivedUsers
+        txtUserSearch.Clear()
+        LoadUsers()
+        ClearEditor()
+    End Sub
+
+    Private Sub ArchiveSelectedUser(sender As Object, e As EventArgs)
+        If String.IsNullOrWhiteSpace(txtUserID.Text) Then
+            MessageBox.Show("Select an account from the list first.", "User Management", MessageBoxButtons.OK, MessageBoxIcon.Warning)
+            Return
+        End If
+
+        Dim userID = Convert.ToInt32(txtUserID.Text)
+        If userID = LoginForm.LoggedInUserID AndAlso Not viewingArchivedUsers Then
+            MessageBox.Show("You cannot archive the account currently in use.", "User Management", MessageBoxButtons.OK, MessageBoxIcon.Warning)
+            Return
+        End If
+
+        Dim actionVerb = If(viewingArchivedUsers, "restore", "archive")
+        If MessageBox.Show(
+            "Are you sure you want to " & actionVerb & " account '" & txtUsername.Text.Trim() & "'?",
+            "Confirm " & If(viewingArchivedUsers, "Restore", "Archive"),
+            MessageBoxButtons.YesNo,
+            MessageBoxIcon.Question
+        ) <> DialogResult.Yes Then Return
+
+        Try
+            Using connection = DatabaseHelper.GetConnection()
+                connection.Open()
+                Dim sql =
+                    "UPDATE Users SET IsArchived=@IsArchived, " &
+                    "ArchivedAt=CASE WHEN @IsArchived=1 THEN SYSDATETIME() ELSE NULL END " &
+                    "WHERE UserID=@UserID"
+                Using command As New SqlCommand(sql, connection)
+                    command.Parameters.Add("@IsArchived", SqlDbType.Bit).Value = Not viewingArchivedUsers
+                    command.Parameters.Add("@UserID", SqlDbType.Int).Value = userID
+                    If command.ExecuteNonQuery() <> 1 Then
+                        Throw New InvalidOperationException("The account was not found.")
+                    End If
+                End Using
+            End Using
+
+            AuditLogger.Log(If(viewingArchivedUsers, "Restored user account", "Archived user account"), "UserID=" & userID.ToString() & "; username=" & txtUsername.Text.Trim())
+            MessageBox.Show(If(viewingArchivedUsers, "Account restored successfully.", "Account archived successfully."), "User Management", MessageBoxButtons.OK, MessageBoxIcon.Information)
+            LoadUsers()
+            LoadActivityUsers()
+            ClearEditor()
+        Catch ex As Exception
+            ShowError("Unable to " & actionVerb & " this account.", ex)
+        End Try
+    End Sub
+
     Private Sub LoadActivityUsers()
         Try
             Using connection = DatabaseHelper.GetConnection()
                 connection.Open()
-                Using adapter As New SqlDataAdapter("SELECT UserID, Username, FullName FROM Users ORDER BY Username", connection)
+                Using adapter As New SqlDataAdapter("SELECT UserID, Username, FullName FROM Users WHERE IsArchived = 0 ORDER BY Username", connection)
                     Dim table As New DataTable()
                     adapter.Fill(table)
                     Dim allRow = table.NewRow()
