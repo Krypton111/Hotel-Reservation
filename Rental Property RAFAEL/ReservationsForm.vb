@@ -63,6 +63,7 @@ Public Class ReservationsForm
     Private txtRoomType As TextBox
     Private txtRoomCapacity As TextBox
     Private txtRoomRate As TextBox
+    Private nudNumberOfGuests As NumericUpDown
 
     Private dtpCheckIn As DateTimePicker
     Private dtpCheckOut As DateTimePicker
@@ -756,6 +757,27 @@ Public Class ReservationsForm
         )
 
         formPanel.Controls.Add(cboPaymentStatus)
+
+
+        '======================================================
+        ' NUMBER OF GUESTS
+        '======================================================
+
+        Dim lblNumberOfGuests As Label =
+            CreateLabel(
+                "Number of Guests",
+                New Point(1000, 161)
+            )
+
+        formPanel.Controls.Add(lblNumberOfGuests)
+
+        nudNumberOfGuests = New NumericUpDown()
+        nudNumberOfGuests.Location = New Point(1000, 188)
+        nudNumberOfGuests.Size = New Size(155, 30)
+        nudNumberOfGuests.Minimum = 1
+        nudNumberOfGuests.Maximum = 20
+        nudNumberOfGuests.Value = 1
+        formPanel.Controls.Add(nudNumberOfGuests)
 
 
         '======================================================
@@ -1529,10 +1551,9 @@ Public Class ReservationsForm
         If cboRoom.SelectedIndex = -1 Then
 
             txtRoomType.Clear()
-
             txtRoomCapacity.Clear()
-
             txtRoomRate.Clear()
+            nudNumberOfGuests.Maximum = 20
 
             Return
 
@@ -1557,6 +1578,10 @@ Public Class ReservationsForm
                 "0.00"
             )
 
+        nudNumberOfGuests.Maximum = Math.Max(1, room.Capacity)
+        If nudNumberOfGuests.Value > nudNumberOfGuests.Maximum Then
+            nudNumberOfGuests.Value = nudNumberOfGuests.Maximum
+        End If
 
         CalculateReservationTotal()
 
@@ -1664,7 +1689,9 @@ Public Class ReservationsForm
                     "rm.RoomType, " &
                     "r.CheckInDate, " &
                     "r.CheckOutDate, " &
-                    "r.Nights, " &
+                    "r.NumberOfNights AS Nights, " &
+                    "r.NumberOfGuests, " &
+                    "r.RoomRate, "
                     "r.TotalAmount, " &
                     "r.ReservationStatus, " &
                     "r.PaymentStatus, " &
@@ -1918,33 +1945,24 @@ Public Class ReservationsForm
                 End If
 
 
-                Dim nights As Integer =
-                    DateDiff(
-                        DateInterval.Day,
-                        dtpCheckIn.Value.Date,
-                        dtpCheckOut.Value.Date
-                    )
-
-
-                Dim totalAmount As Decimal =
-                    nights * room.Rate
-
-
-                Dim sql As String =
+Dim sql As String =
                     "INSERT INTO Reservations " &
-                    "(GuestID, RoomID, CheckInDate, CheckOutDate, " &
-                    "Nights, TotalAmount, ReservationStatus, " &
-                    "PaymentStatus, SpecialRequests) " &
+                    "(ReferenceNumber, GuestID, RoomID, CheckInDate, CheckOutDate, " &
+                    "NumberOfGuests, RoomRate, ReservationStatus, PaymentStatus, SpecialRequests) " &
                     "VALUES " &
-                    "(@GuestID, @RoomID, @CheckInDate, @CheckOutDate, " &
-                    "@Nights, @TotalAmount, @ReservationStatus, " &
-                    "@PaymentStatus, @SpecialRequests)"
+                    "(@ReferenceNumber, @GuestID, @RoomID, @CheckInDate, @CheckOutDate, " &
+                    "@NumberOfGuests, @RoomRate, @ReservationStatus, @PaymentStatus, @SpecialRequests)"
 
 
                 Using command As New SqlCommand(
                     sql,
                     connection
                 )
+
+                    command.Parameters.AddWithValue(
+                        "@ReferenceNumber",
+                        GenerateReservationReference()
+                    )
 
                     command.Parameters.AddWithValue(
                         "@GuestID",
@@ -1967,13 +1985,13 @@ Public Class ReservationsForm
                     )
 
                     command.Parameters.AddWithValue(
-                        "@Nights",
-                        nights
+                        "@NumberOfGuests",
+                        Convert.ToInt32(nudNumberOfGuests.Value)
                     )
 
                     command.Parameters.AddWithValue(
-                        "@TotalAmount",
-                        totalAmount
+                        "@RoomRate",
+                        room.Rate
                     )
 
                     command.Parameters.AddWithValue(
@@ -1993,7 +2011,7 @@ Public Class ReservationsForm
 
                     command.ExecuteNonQuery()
                     AuditLogger.Log("Changed reservation data", "A reservation record was created, updated, or otherwise changed.")
-                    AuditLogger.Log("Changed reservation data", "A reservation record was created, updated, or otherwise changed.")
+                    
 
                 End Using
 
@@ -2112,26 +2130,14 @@ Public Class ReservationsForm
                 End If
 
 
-                Dim nights As Integer =
-                    DateDiff(
-                        DateInterval.Day,
-                        dtpCheckIn.Value.Date,
-                        dtpCheckOut.Value.Date
-                    )
-
-
-                Dim totalAmount As Decimal =
-                    nights * room.Rate
-
-
-                Dim sql As String =
+Dim sql As String =
                     "UPDATE Reservations SET " &
                     "GuestID = @GuestID, " &
                     "RoomID = @RoomID, " &
                     "CheckInDate = @CheckInDate, " &
                     "CheckOutDate = @CheckOutDate, " &
-                    "Nights = @Nights, " &
-                    "TotalAmount = @TotalAmount, " &
+                    "NumberOfGuests = @NumberOfGuests, " &
+                    "RoomRate = @RoomRate, " &
                     "ReservationStatus = @ReservationStatus, " &
                     "PaymentStatus = @PaymentStatus, " &
                     "SpecialRequests = @SpecialRequests " &
@@ -2164,13 +2170,13 @@ Public Class ReservationsForm
                     )
 
                     command.Parameters.AddWithValue(
-                        "@Nights",
-                        nights
+                        "@NumberOfGuests",
+                        Convert.ToInt32(nudNumberOfGuests.Value)
                     )
 
                     command.Parameters.AddWithValue(
-                        "@TotalAmount",
-                        totalAmount
+                        "@RoomRate",
+                        room.Rate
                     )
 
                     command.Parameters.AddWithValue(
@@ -2195,7 +2201,7 @@ Public Class ReservationsForm
 
                     command.ExecuteNonQuery()
                     AuditLogger.Log("Changed reservation data", "A reservation record was created, updated, or otherwise changed.")
-                    AuditLogger.Log("Changed reservation data", "A reservation record was created, updated, or otherwise changed.")
+                    
 
                 End Using
 
@@ -2305,7 +2311,7 @@ Public Class ReservationsForm
 
                     command.ExecuteNonQuery()
                     AuditLogger.Log("Changed reservation data", "A reservation record was created, updated, or otherwise changed.")
-                    AuditLogger.Log("Changed reservation data", "A reservation record was created, updated, or otherwise changed.")
+                    
 
                 End Using
 
@@ -2344,6 +2350,14 @@ Public Class ReservationsForm
     End Sub
 
 
+    Private Function GenerateReservationReference() As String
+        Return "AR-" &
+               DateTime.Now.ToString("yyyyMMddHHmmss") &
+               "-" &
+               Guid.NewGuid().ToString("N").Substring(0, 6).ToUpperInvariant()
+    End Function
+
+
     '==========================================================
     ' VALIDATE RESERVATION
     '==========================================================
@@ -2379,6 +2393,21 @@ Public Class ReservationsForm
 
             Return False
 
+        End If
+
+
+        If cboRoom.SelectedIndex >= 0 Then
+            Dim selectedRoom As RoomItem = DirectCast(cboRoom.SelectedItem, RoomItem)
+            If nudNumberOfGuests.Value > selectedRoom.Capacity Then
+                MessageBox.Show(
+                    "The number of guests cannot exceed this room's capacity.",
+                    "Room Capacity",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning
+                )
+                nudNumberOfGuests.Focus()
+                Return False
+            End If
         End If
 
 
@@ -2565,7 +2594,7 @@ Public Class ReservationsForm
 
             command.ExecuteNonQuery()
                     AuditLogger.Log("Changed reservation data", "A reservation record was created, updated, or otherwise changed.")
-                    AuditLogger.Log("Changed reservation data", "A reservation record was created, updated, or otherwise changed.")
+                    
 
         End Using
 
@@ -2642,6 +2671,12 @@ Public Class ReservationsForm
                 row.Cells("CheckOutDate").Value
             )
 
+
+        If dgvReservations.Columns.Contains("NumberOfGuests") AndAlso
+           row.Cells("NumberOfGuests").Value IsNot Nothing Then
+            Dim rowGuestCount As Decimal = Convert.ToDecimal(row.Cells("NumberOfGuests").Value)
+            nudNumberOfGuests.Value = Math.Max(nudNumberOfGuests.Minimum, Math.Min(rowGuestCount, nudNumberOfGuests.Maximum))
+        End If
 
         txtNights.Text =
             row.Cells("Nights").Value.ToString()
@@ -2815,7 +2850,9 @@ Public Class ReservationsForm
                     "rm.RoomType, " &
                     "r.CheckInDate, " &
                     "r.CheckOutDate, " &
-                    "r.Nights, " &
+                    "r.NumberOfNights AS Nights, " &
+                    "r.NumberOfGuests, " &
+                    "r.RoomRate, "
                     "r.TotalAmount, " &
                     "r.ReservationStatus, " &
                     "r.PaymentStatus, " &
@@ -2938,6 +2975,9 @@ Public Class ReservationsForm
         txtGuestEmail.Clear()
 
         cboRoom.SelectedIndex = -1
+
+        nudNumberOfGuests.Maximum = 20
+        nudNumberOfGuests.Value = 1
 
         txtRoomType.Clear()
 
