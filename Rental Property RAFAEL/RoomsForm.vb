@@ -222,22 +222,8 @@ Public Class RoomsForm
 
 
         '-------------------------------------------------------
-        ' FORM PANEL
+        ' ROOM EDITOR IS CREATED AFTER THE GRID BELOW
         '-------------------------------------------------------
-
-        formPanel = New Panel()
-
-        formPanel.Dock =
-            DockStyle.Top
-
-        formPanel.Height =
-            265
-
-        formPanel.BackColor =
-            WarmWhite
-
-        formPanel.BorderStyle =
-            BorderStyle.FixedSingle
 
         '-------------------------------------------------------
         ' GRID PANEL
@@ -288,6 +274,8 @@ Public Class RoomsForm
 
         formPanel.BorderStyle =
             BorderStyle.FixedSingle
+
+        formPanel.AutoScroll = False
 
         contentPanel.Controls.Add(
             formPanel
@@ -781,6 +769,26 @@ Public Class RoomsForm
         formPanel.Controls.Add(
             btnClose
         )
+
+        ' Keep the input row in front of other editor controls.
+        ' This prevents the description/search region from obscuring
+        ' the fields required by Add Room.
+        For Each control As Control In {
+            roomIDLabel, txtRoomID,
+            roomNumberLabel, txtRoomNumber,
+            roomTypeLabel, cboRoomType,
+            capacityLabel, nudCapacity,
+            rateLabel, txtRate,
+            floorLabel, nudFloor,
+            statusFieldLabel, cboStatus
+        }
+            control.Visible = True
+            control.BringToFront()
+        Next
+
+        txtRoomNumber.TabIndex = 0
+        txtRoomNumber.Visible = True
+        txtRoomNumber.BringToFront()
 
     End Sub
 
@@ -2067,7 +2075,7 @@ Public Class RoomsForm
         End If
 
 
-        txtRoomNumber.Focus()
+        ' Do not force focus/scroll during initial form construction.
 
     End Sub
 
