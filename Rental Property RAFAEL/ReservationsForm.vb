@@ -2251,6 +2251,29 @@ Dim sql As String =
                     roomID = Convert.ToInt32(value)
                 End Using
 
+                If viewingArchived Then
+                    Using dependencyCheck As New SqlCommand(
+                        "SELECT COUNT(*) " &
+                        "FROM Reservations r " &
+                        "INNER JOIN Guests g ON g.GuestID = r.GuestID " &
+                        "INNER JOIN Rooms rm ON rm.RoomID = r.RoomID " &
+                        "WHERE r.ReservationID = @ReservationID " &
+                        "AND (g.IsArchived = 1 OR rm.IsArchived = 1)",
+                        connection
+                    )
+                        dependencyCheck.Parameters.Add("@ReservationID", SqlDbType.Int).Value = selectedReservationID
+                        If Convert.ToInt32(dependencyCheck.ExecuteScalar()) > 0 Then
+                            MessageBox.Show(
+                                "Restore the linked guest and room first, then restore this reservation.",
+                                "Archived Dependencies",
+                                MessageBoxButtons.OK,
+                                MessageBoxIcon.Warning
+                            )
+                            Return
+                        End If
+                    End Using
+                End If
+
                 Dim sql As String =
                     "UPDATE Reservations SET IsArchived = @IsArchived, " &
                     "ArchivedAt = CASE WHEN @IsArchived = 1 THEN SYSDATETIME() ELSE NULL END " &
