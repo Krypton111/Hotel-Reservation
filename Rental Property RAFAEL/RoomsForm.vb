@@ -75,6 +75,8 @@ Public Class RoomsForm
     Private btnAdd As Button
     Private btnUpdate As Button
     Private btnDelete As Button
+    Private btnViewArchived As Button
+    Private viewingArchived As Boolean = False
     Private btnClear As Button
     Private btnSearch As Button
     Private btnRefresh As Button
@@ -331,7 +333,7 @@ Public Class RoomsForm
         btnUpdate = CreateButton("Update", Point.Empty, New Size(90, 36), Navy)
         AddHandler btnUpdate.Click, AddressOf UpdateButton_Click
 
-        btnDelete = CreateButton("Delete", Point.Empty, New Size(90, 36), Color.FromArgb(116, 70, 65))
+        btnDelete = CreateButton("Archive", Point.Empty, New Size(90, 36), Color.FromArgb(116, 70, 65))
         AddHandler btnDelete.Click, AddressOf DeleteButton_Click
 
         btnClear = CreateButton("Clear", Point.Empty, New Size(78, 36), Color.FromArgb(108, 105, 98))
@@ -346,9 +348,12 @@ Public Class RoomsForm
         btnClose = CreateButton("Close", Point.Empty, New Size(78, 36), Color.FromArgb(108, 105, 98))
         AddHandler btnClose.Click, AddressOf CloseButton_Click
 
+        btnViewArchived = CreateButton("Show Archived", Point.Empty, New Size(125, 36), Color.FromArgb(84, 88, 96))
+        AddHandler btnViewArchived.Click, AddressOf ToggleArchivedRooms
+
         actionsPanel.Controls.AddRange(New Control() {
             btnAdd, btnUpdate, btnDelete, btnClear,
-            btnSearch, btnRefresh, btnClose
+            btnSearch, btnRefresh, btnClose, btnViewArchived
         })
 
         editorLayout.Controls.Add(actionsPanel, 1, 3)
@@ -490,6 +495,7 @@ Public Class RoomsForm
                 "FloorNumber, " &
                 "Description " &
                 "FROM Rooms " &
+                "WHERE IsArchived = " & If(viewingArchived, "1", "0") & " " &
                 "ORDER BY FloorNumber, RoomNumber"
 
             Using connection =
@@ -752,6 +758,11 @@ Public Class RoomsForm
         e As EventArgs
     )
 
+        If viewingArchived Then
+            MessageBox.Show("Switch to active rooms before adding a room.", "Archive View", MessageBoxButtons.OK, MessageBoxIcon.Information)
+            Return
+        End If
+
         If Not ValidateRoomFields() Then
             Return
         End If
@@ -842,6 +853,11 @@ Public Class RoomsForm
         sender As Object,
         e As EventArgs
     )
+
+        If viewingArchived Then
+            MessageBox.Show("Restore this room before editing it.", "Archive View", MessageBoxButtons.OK, MessageBoxIcon.Information)
+            Return
+        End If
 
         If selectedRoomID <= 0 Then
 
@@ -958,109 +974,92 @@ Public Class RoomsForm
     )
 
         If selectedRoomID <= 0 Then
-
             MessageBox.Show(
                 "Please select a room first.",
-                "Delete Room",
+                If(viewingArchived, "Restore Room", "Archive Room"),
                 MessageBoxButtons.OK,
                 MessageBoxIcon.Warning
             )
-
             Return
-
         End If
 
-
-        If RoomHasReservations(
-            selectedRoomID
-        ) Then
-
+        If Not viewingArchived AndAlso RoomHasReservations(selectedRoomID) Then
             MessageBox.Show(
-                "This room cannot be deleted because it has reservation records." &
-                Environment.NewLine &
-                Environment.NewLine &
-                "You can change the room status to Maintenance instead.",
-                "Cannot Delete Room",
+                "This room cannot be archived while it has active reservations. Archive or complete those reservations first.",
+                "Room Has Active Reservations",
                 MessageBoxButtons.OK,
                 MessageBoxIcon.Warning
             )
-
-            Return
-
-        End If
-
-
-        Dim result As DialogResult =
-            MessageBox.Show(
-                "Are you sure you want to delete Room " &
-                txtRoomNumber.Text &
-                "?",
-                "Confirm Delete",
-                MessageBoxButtons.YesNo,
-                MessageBoxIcon.Question
-            )
-
-
-        If result <> DialogResult.Yes Then
             Return
         End If
 
+        Dim actionVerb As String = If(viewingArchived, "restore", "archive")
+        If MessageBox.Show(
+            "Are you sure you want to " & actionVerb & " Room " & txtRoomNumber.Text.Trim() & "?" &
+            Environment.NewLine & Environment.NewLine &
+            "The record will be retained and can be restored later.",
+            "Confirm " & If(viewingArchived, "Restore", "Archive"),
+            MessageBoxButtons.YesNo,
+            MessageBoxIcon.Question
+        ) <> DialogResult.Yes Then Return
 
         Try
-
-            Dim sql As String =
-                "DELETE FROM Rooms " &
-                "WHERE RoomID = @RoomID"
-
-            Using connection =
-                DatabaseHelper.GetConnection()
-
+            Using connection = DatabaseHelper.GetConnection()
                 connection.Open()
 
-                Using command As New SqlCommand(
-                    sql,
-                    connection
-                )
+                Dim sql As String =
+                    "UPDATE Rooms SET IsArchived = @IsArchived, " &
+                    "ArchivedAt = CASE WHEN @IsArchived = 1 THEN SYSDATETIME() ELSE NULL END " &
+                    "WHERE RoomID = @RoomID"
 
-                    command.Parameters.AddWithValue(
-                        "@RoomID",
-                        selectedRoomID
-                    )
-
-                    command.ExecuteNonQuery()
-                    AuditLogger.Log("Changed room data", "A room record was created, updated, or otherwise changed.")
-
+                Using command As New SqlCommand(sql, connection)
+                    command.Parameters.Add("@IsArchived", SqlDbType.Bit).Value = Not viewingArchived
+                    command.Parameters.Add("@RoomID", SqlDbType.Int).Value = selectedRoomID
+                    If command.ExecuteNonQuery() <> 1 Then
+                        Throw New InvalidOperationException("The room was not found or was not changed.")
+                    End If
                 End Using
-
             End Using
 
+            AuditLogger.Log(
+                If(viewingArchived, "Restored room", "Archived room"),
+                If(viewingArchived, "Restored a room record.", "Archived a room record.")
+            )
 
             MessageBox.Show(
-                "Room deleted successfully.",
+                If(viewingArchived, "Room restored successfully.", "Room archived successfully."),
                 "Room Management",
                 MessageBoxButtons.OK,
                 MessageBoxIcon.Information
             )
 
-
             LoadRooms()
-
             ClearFields()
 
-
         Catch ex As Exception
-
             MessageBox.Show(
-                "Unable to delete the room." &
-                Environment.NewLine &
-                Environment.NewLine &
-                ex.Message,
+                "Unable to " & actionVerb & " the room." &
+                Environment.NewLine & Environment.NewLine & ex.Message,
                 "Database Error",
                 MessageBoxButtons.OK,
                 MessageBoxIcon.Error
             )
-
         End Try
+
+    End Sub
+
+
+    Private Sub ToggleArchivedRooms(sender As Object, e As EventArgs)
+
+        viewingArchived = Not viewingArchived
+        btnViewArchived.Text = If(viewingArchived, "Show Active", "Show Archived")
+        btnDelete.Text = If(viewingArchived, "Restore", "Archive")
+        btnAdd.Enabled = Not viewingArchived
+        btnUpdate.Enabled = Not viewingArchived
+
+        txtSearch.Clear()
+        LoadRooms()
+        ClearFields()
 
     End Sub
 
@@ -1356,7 +1355,7 @@ Public Class RoomsForm
             Dim sql As String =
                 "SELECT COUNT(*) " &
                 "FROM Reservations " &
-                "WHERE RoomID = @RoomID"
+                "WHERE RoomID = @RoomID AND IsArchived = 0 AND ReservationStatus IN ('Reserved', 'Checked-In')"
 
             Using connection =
                 DatabaseHelper.GetConnection()
@@ -1448,11 +1447,11 @@ Public Class RoomsForm
                 "FloorNumber, " &
                 "Description " &
                 "FROM Rooms " &
-                "WHERE " &
-                "RoomNumber LIKE @Search " &
+                "WHERE IsArchived = " & If(viewingArchived, "1", "0") & " " &
+                "AND (RoomNumber LIKE @Search " &
                 "OR RoomType LIKE @Search " &
                 "OR Status LIKE @Search " &
-                "OR Description LIKE @Search " &
+                "OR Description LIKE @Search) " &
                 "ORDER BY FloorNumber, RoomNumber"
 
 
