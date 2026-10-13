@@ -1048,6 +1048,9 @@ Public Class PaymentsForm
                     "INNER JOIN Rooms rm " &
                     "ON r.RoomID = rm.RoomID " &
                     "WHERE r.ReservationStatus <> 'Cancelled' " &
+                    "AND r.IsArchived = 0 " &
+                    "AND g.IsArchived = 0 " &
+                    "AND rm.IsArchived = 0 " &
                     "ORDER BY r.ReservationID DESC"
 
 
