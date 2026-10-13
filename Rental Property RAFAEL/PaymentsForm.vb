@@ -74,7 +74,7 @@ Public Class PaymentsForm
 
     Private btnAdd As Button
     Private btnUpdate As Button
-    Private btnDelete As Button
+    Private btnArchive As Button
     Private btnViewArchived As Button
     Private viewingArchived As Boolean = False
     Private btnClear As Button
@@ -736,7 +736,7 @@ Public Class PaymentsForm
         formPanel.Controls.Add(btnUpdate)
 
 
-        btnDelete =
+        btnArchive =
             CreateButton(
                 "Archive",
                 New Point(395, 250),
@@ -744,7 +744,7 @@ Public Class PaymentsForm
                 Rose
             )
 
-        formPanel.Controls.Add(btnDelete)
+        formPanel.Controls.Add(btnArchive)
 
         btnViewArchived = CreateButton(
             "Show Archived",
@@ -764,7 +764,7 @@ Public Class PaymentsForm
         AddHandler btnUpdate.Click,
             AddressOf UpdatePaymentClicked
 
-        AddHandler btnDelete.Click,
+        AddHandler btnArchive.Click,
             AddressOf ArchivePaymentClicked
 
         AddHandler btnViewArchived.Click,
@@ -2002,7 +2002,7 @@ Public Class PaymentsForm
 
 
     '==========================================================
-    ' DELETE PAYMENT
+    ' ARCHIVE PAYMENT
     '==========================================================
 
     Private Sub ArchivePaymentClicked(
@@ -2085,7 +2085,7 @@ Public Class PaymentsForm
 
         viewingArchived = Not viewingArchived
         btnViewArchived.Text = If(viewingArchived, "Show Active", "Show Archived")
-        btnDelete.Text = If(viewingArchived, "Restore", "Archive")
+        btnArchive.Text = If(viewingArchived, "Restore", "Archive")
         btnAdd.Enabled = Not viewingArchived
         btnUpdate.Enabled = Not viewingArchived
 
