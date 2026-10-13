@@ -214,9 +214,7 @@ Public Class GuestsForm
         formPanel.BorderStyle =
             BorderStyle.FixedSingle
 
-        mainPanel.Controls.Add(
-            formPanel
-        )
+        ' The layout container below owns the form panel placement.
 
         CreateSectionTitle(
             formPanel,
@@ -339,9 +337,7 @@ Public Class GuestsForm
         buttonPanel.BackColor =
             Ivory
 
-        mainPanel.Controls.Add(
-            buttonPanel
-        )
+        ' Added to the responsive layout below.
 
         btnAdd =
             CreateActionButton(
@@ -435,9 +431,7 @@ Public Class GuestsForm
         searchPanel.BackColor =
             Ivory
 
-        mainPanel.Controls.Add(
-            searchPanel
-        )
+        ' Added to the responsive layout below.
 
         Dim lblSearch As New Label()
 
@@ -577,13 +571,12 @@ Public Class GuestsForm
         dgvGuests.DefaultCellStyle.SelectionForeColor =
             Charcoal
 
-        mainPanel.Controls.Add(dgvGuests)
-
-        ' The list heading has its own docked panel above the table.
+        ' The list heading and all content sections are placed in fixed
+        ' layout rows. This prevents the form fields from covering the grid.
         Dim guestListHeader As New Panel()
-        guestListHeader.Dock = DockStyle.Top
-        guestListHeader.Height = 38
+        guestListHeader.Dock = DockStyle.Fill
         guestListHeader.BackColor = Ivory
+        guestListHeader.Padding = New Padding(0, 0, 0, 0)
 
         Dim lblGuestList As New Label()
         lblGuestList.Text = "GUEST LIST"
@@ -592,15 +585,37 @@ Public Class GuestsForm
         lblGuestList.Font = New Font("Segoe UI Semibold", 10.0F, FontStyle.Bold)
         lblGuestList.ForeColor = DeepNavy
         guestListHeader.Controls.Add(lblGuestList)
-        mainPanel.Controls.Add(guestListHeader)
 
-        ' WinForms docking is z-order-sensitive. Put the fill grid behind
-        ' the top-docked panels so it occupies only the remaining area.
-        mainPanel.Controls.SetChildIndex(dgvGuests, mainPanel.Controls.Count - 1)
-        mainPanel.Controls.SetChildIndex(guestListHeader, 0)
-        mainPanel.Controls.SetChildIndex(searchPanel, 0)
-        mainPanel.Controls.SetChildIndex(buttonPanel, 0)
-        mainPanel.Controls.SetChildIndex(formPanel, 0)
+        Dim guestLayout As New TableLayoutPanel()
+        guestLayout.Dock = DockStyle.Fill
+        guestLayout.Margin = New Padding(0)
+        guestLayout.Padding = New Padding(0)
+        guestLayout.BackColor = Ivory
+        guestLayout.ColumnCount = 1
+        guestLayout.RowCount = 5
+        guestLayout.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 100.0F))
+        guestLayout.RowStyles.Add(New RowStyle(SizeType.Absolute, 185.0F))
+        guestLayout.RowStyles.Add(New RowStyle(SizeType.Absolute, 50.0F))
+        guestLayout.RowStyles.Add(New RowStyle(SizeType.Absolute, 50.0F))
+        guestLayout.RowStyles.Add(New RowStyle(SizeType.Absolute, 35.0F))
+        guestLayout.RowStyles.Add(New RowStyle(SizeType.Percent, 100.0F))
+
+        formPanel.Dock = DockStyle.Fill
+        formPanel.Margin = New Padding(0)
+        buttonPanel.Dock = DockStyle.Fill
+        buttonPanel.Margin = New Padding(0)
+        searchPanel.Dock = DockStyle.Fill
+        searchPanel.Margin = New Padding(0)
+        guestListHeader.Margin = New Padding(0)
+        dgvGuests.Dock = DockStyle.Fill
+        dgvGuests.Margin = New Padding(0)
+
+        guestLayout.Controls.Add(formPanel, 0, 0)
+        guestLayout.Controls.Add(buttonPanel, 0, 1)
+        guestLayout.Controls.Add(searchPanel, 0, 2)
+        guestLayout.Controls.Add(guestListHeader, 0, 3)
+        guestLayout.Controls.Add(dgvGuests, 0, 4)
+        mainPanel.Controls.Add(guestLayout)
 
         '======================================================
         ' EVENTS
