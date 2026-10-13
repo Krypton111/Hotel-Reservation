@@ -1992,6 +1992,7 @@ Public Class ReservationsForm
                     )
 
                     command.ExecuteNonQuery()
+                    AuditLogger.Log("Changed reservation data", "A reservation record was created, updated, or otherwise changed.")
 
                 End Using
 
@@ -2192,6 +2193,7 @@ Public Class ReservationsForm
                     )
 
                     command.ExecuteNonQuery()
+                    AuditLogger.Log("Changed reservation data", "A reservation record was created, updated, or otherwise changed.")
 
                 End Using
 
@@ -2300,6 +2302,7 @@ Public Class ReservationsForm
                     )
 
                     command.ExecuteNonQuery()
+                    AuditLogger.Log("Changed reservation data", "A reservation record was created, updated, or otherwise changed.")
 
                 End Using
 
@@ -2558,6 +2561,7 @@ Public Class ReservationsForm
             )
 
             command.ExecuteNonQuery()
+                    AuditLogger.Log("Changed reservation data", "A reservation record was created, updated, or otherwise changed.")
 
         End Using
 
