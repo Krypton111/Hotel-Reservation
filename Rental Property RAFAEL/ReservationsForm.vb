@@ -51,6 +51,7 @@ Public Class ReservationsForm
     Private txtSearch As TextBox
     Private btnSearch As Button
     Private btnRefresh As Button
+    Private btnGuestPolicies As Button
 
     Private txtReservationID As TextBox
 
@@ -245,6 +246,25 @@ Public Class ReservationsForm
 
         AddHandler btnRefresh.Click,
             AddressOf RefreshClicked
+
+        '======================================================
+        ' GUEST REQUIREMENTS AND POLICIES
+        '======================================================
+
+        btnGuestPolicies =
+            CreateButton(
+                "Guest Requirements & Policies",
+                New Point(625, 114),
+                New Size(245, 36),
+                Navy
+            )
+
+        btnGuestPolicies.ForeColor = Color.White
+
+        Me.Controls.Add(btnGuestPolicies)
+
+        AddHandler btnGuestPolicies.Click,
+            AddressOf GuestPoliciesClicked
 
         AddHandler txtSearch.KeyDown,
             AddressOf SearchKeyDown
@@ -907,6 +927,140 @@ Public Class ReservationsForm
 
     End Sub
 
+
+
+
+    '==========================================================
+    ' GUEST REQUIREMENTS AND POLICIES
+    '==========================================================
+
+    Private Sub GuestPoliciesClicked(
+        sender As Object,
+        e As EventArgs
+    )
+
+        Using policyForm As New Form()
+
+            policyForm.Text =
+                "Aurelia Grand Hotel - Guest Requirements & Policies"
+
+            policyForm.StartPosition =
+                FormStartPosition.CenterParent
+
+            policyForm.Size =
+                New Size(760, 700)
+
+            policyForm.MinimumSize =
+                New Size(650, 580)
+
+            policyForm.BackColor = Ivory
+            policyForm.Font = New Font("Segoe UI", 9.5F)
+            policyForm.FormBorderStyle = FormBorderStyle.Sizable
+
+            Dim heading As New Label()
+
+            heading.Text = "GUEST REQUIREMENTS & POLICIES"
+            heading.Location = New Point(24, 20)
+            heading.Size = New Size(690, 38)
+            heading.Font = New Font("Georgia", 17, FontStyle.Bold)
+            heading.ForeColor = Charcoal
+            heading.Anchor = AnchorStyles.Top Or AnchorStyles.Left Or AnchorStyles.Right
+
+            policyForm.Controls.Add(heading)
+
+            Dim subtitle As New Label()
+
+            subtitle.Text =
+                "Please explain these requirements to guests before confirming their stay."
+
+            subtitle.Location = New Point(26, 61)
+            subtitle.Size = New Size(690, 36)
+            subtitle.ForeColor = MutedGray
+            subtitle.Anchor = AnchorStyles.Top Or AnchorStyles.Left Or AnchorStyles.Right
+
+            policyForm.Controls.Add(subtitle)
+
+            Dim policyText As New RichTextBox()
+
+            policyText.Location = New Point(24, 105)
+            policyText.Size = New Size(695, 485)
+            policyText.Anchor =
+                AnchorStyles.Top Or AnchorStyles.Bottom Or
+                AnchorStyles.Left Or AnchorStyles.Right
+
+            policyText.ReadOnly = True
+            policyText.BorderStyle = BorderStyle.FixedSingle
+            policyText.BackColor = WarmWhite
+            policyText.ForeColor = Charcoal
+            policyText.Font = New Font("Segoe UI", 10.0F)
+            policyText.DetectUrls = False
+
+            policyText.Text =
+                "CHECK-IN REQUIREMENTS" & Environment.NewLine &
+                Environment.NewLine &
+                "1. Each adult guest must present a valid government-issued photo ID at check-in. The name should match the reservation." & Environment.NewLine &
+                "2. The guest must provide accurate contact information and confirm the number of people staying in the room." & Environment.NewLine &
+                "3. Only registered guests may stay overnight. Room occupancy must not exceed the room's stated capacity." & Environment.NewLine &
+                "4. Any required deposit or outstanding balance must be settled according to the hotel's payment terms before check-in." & Environment.NewLine &
+                "5. Special requests are subject to availability and are not guaranteed until confirmed by hotel staff." & Environment.NewLine &
+                Environment.NewLine &
+                "CHECK-IN AND CHECK-OUT" & Environment.NewLine &
+                Environment.NewLine &
+                "6. Standard check-in time is 2:00 PM and standard check-out time is 12:00 noon, unless the reservation or hotel staff confirms otherwise." & Environment.NewLine &
+                "7. Early check-in and late check-out depend on room availability and may incur additional charges. Guests should ask the front desk for approval." & Environment.NewLine &
+                "8. Guests should notify the front desk promptly if arrival will be significantly delayed." & Environment.NewLine &
+                Environment.NewLine &
+                "DURING THE STAY" & Environment.NewLine &
+                Environment.NewLine &
+                "9. Smoking and vaping are not permitted inside guest rooms or indoor non-smoking areas. Any legally permitted designated area must be used." & Environment.NewLine &
+                "10. Quiet hours are from 10:00 PM to 7:00 AM. Guests must avoid excessive noise and respect other guests and hotel staff." & Environment.NewLine &
+                "11. Parties, illegal activities, and disruptive or unsafe behavior are prohibited on hotel premises." & Environment.NewLine &
+                "12. Visitors must follow hotel registration and visiting-hour rules. Visitors may not stay overnight unless registered and approved." & Environment.NewLine &
+                "13. Guests are responsible for damage, missing items, or extraordinary cleaning caused by them or their visitors, subject to assessment by hotel management." & Environment.NewLine &
+                "14. Keep room keys/cards secure and return them at check-out. Lost keys/cards should be reported to the front desk." & Environment.NewLine &
+                "15. Please report maintenance issues, accidents, or safety concerns to hotel staff immediately." & Environment.NewLine &
+                Environment.NewLine &
+                "PAYMENTS, CHANGES, AND CHECK-OUT" & Environment.NewLine &
+                Environment.NewLine &
+                "16. Room charges are based on the confirmed rate and length of stay. Additional services, approved extra guests, and applicable fees may be charged separately." & Environment.NewLine &
+                "17. Reservation changes, extensions, cancellations, and refunds are subject to the terms confirmed at booking. Guests should contact the hotel directly for assistance." & Environment.NewLine &
+                "18. Guests should check their bill, settle any remaining balance, and return room keys/cards when checking out." & Environment.NewLine &
+                Environment.NewLine &
+                "PRIVACY AND SAFETY" & Environment.NewLine &
+                Environment.NewLine &
+                "19. Guest information is to be handled by authorized hotel personnel for legitimate reservation, service, security, and legal purposes." & Environment.NewLine &
+                "20. The hotel may address serious or repeated policy violations in accordance with applicable law and the reservation terms." & Environment.NewLine &
+                Environment.NewLine &
+                "STAFF REMINDER" & Environment.NewLine &
+                "These are proposed standard house rules. Management should confirm the check-in/out times, deposit requirements, smoking arrangements, visitor rules, and cancellation/refund terms before treating them as the hotel's final official policy."
+
+            policyForm.Controls.Add(policyText)
+
+            Dim btnClosePolicies As Button =
+                CreateButton(
+                    "Close",
+                    New Point(604, 605),
+                    New Size(115, 38),
+                    Champagne
+                )
+
+            btnClosePolicies.Anchor =
+                AnchorStyles.Bottom Or AnchorStyles.Right
+
+            btnClosePolicies.ForeColor = DeepNavy
+
+            AddHandler btnClosePolicies.Click,
+                Sub(closeSender As Object, closeArgs As EventArgs)
+                    policyForm.Close()
+                End Sub
+
+            policyForm.Controls.Add(btnClosePolicies)
+
+            policyForm.ShowDialog(Me)
+
+        End Using
+
+    End Sub
 
     '==========================================================
     ' CREATE LABEL
