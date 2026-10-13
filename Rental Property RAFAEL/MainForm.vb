@@ -2014,20 +2014,33 @@ Public Class MainForm
         End If
 
 
-        LoginForm.LoggedInUserID =
-            0
+        ' Clear the previous user's session before showing login.
+        LoginForm.LoggedInUserID = 0
+        LoginForm.LoggedInUsername = ""
+        LoginForm.LoggedInFullName = ""
+        LoginForm.LoggedInRole = ""
 
-        LoginForm.LoggedInUsername =
-            ""
+        ' Keep the application alive while another user signs in.
+        Me.Hide()
 
-        LoginForm.LoggedInFullName =
-            ""
+        Using login As New LoginForm()
 
-        LoginForm.LoggedInRole =
-            ""
+            If login.ShowDialog() <> DialogResult.OK Then
 
+                ' Closing login or choosing Exit ends the application.
+                Application.Exit()
+                Return
 
-        Me.Close()
+            End If
+
+        End Using
+
+        ' The new user's role may differ, so refresh permissions and data.
+        ApplyRolePermissions()
+        ShowDashboard()
+
+        Me.Show()
+        Me.Activate()
 
     End Sub
 
