@@ -886,7 +886,7 @@ Public Class RoomsForm
                 "RoomNumber = @RoomNumber, " &
                 "RoomType = @RoomType, " &
                 "Capacity = @Capacity, " &
-                "BedType = @BedType, "
+                "BedType = @BedType, " &
                 "RatePerNight = @RatePerNight, " &
                 "Status = @Status, " &
                 "FloorNumber = @FloorNumber, " &
