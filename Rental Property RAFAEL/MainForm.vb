@@ -35,6 +35,7 @@ Public Class MainForm
     Private btnRooms As Button
     Private btnPayments As Button
     Private btnReports As Button
+    Private btnUserManagement As Button
     Private btnLogout As Button
 
 
@@ -397,6 +398,11 @@ Public Class MainForm
                 "Reports"
             )
 
+        btnUserManagement =
+            CreateNavigationButton(
+                "User Management"
+            )
+
         btnLogout =
             CreateNavigationButton(
                 "Logout"
@@ -443,6 +449,12 @@ Public Class MainForm
                 390
             )
 
+        btnUserManagement.Location =
+            New Point(
+                20,
+                442
+            )
+
 
         btnLogout.Anchor =
             AnchorStyles.Left Or
@@ -483,6 +495,10 @@ Public Class MainForm
 
         pnlNavigation.Controls.Add(
             btnReports
+        )
+
+        pnlNavigation.Controls.Add(
+            btnUserManagement
         )
 
         pnlNavigation.Controls.Add(
@@ -583,6 +599,9 @@ Public Class MainForm
 
         AddHandler btnReports.Click,
             AddressOf ReportsClicked
+
+        AddHandler btnUserManagement.Click,
+            AddressOf UserManagementClicked
 
         AddHandler btnLogout.Click,
             AddressOf LogoutClicked
@@ -729,6 +748,9 @@ Public Class MainForm
         btnReports.Visible =
             False
 
+        btnUserManagement.Visible =
+            False
+
 
         If role.Equals(
             "Admin",
@@ -748,6 +770,9 @@ Public Class MainForm
                 True
 
             btnReports.Visible =
+                True
+
+            btnUserManagement.Visible =
                 True
 
             Return
@@ -829,6 +854,7 @@ Public Class MainForm
         e As EventArgs
     )
 
+        AuditLogger.Log("Opened Dashboard", "Viewed dashboard overview.")
         ShowDashboard()
 
     End Sub
@@ -1583,6 +1609,7 @@ Public Class MainForm
         e As EventArgs
     )
 
+        AuditLogger.Log("Opened Reservations", "Viewed reservation management.")
         OpenPage(
             New ReservationsForm(),
             "Reservations"
@@ -1600,6 +1627,7 @@ Public Class MainForm
         e As EventArgs
     )
 
+        AuditLogger.Log("Opened Guest Management", "Viewed guest records.")
         OpenPage(
             New GuestsForm(),
             "Guest Management"
@@ -1617,6 +1645,7 @@ Public Class MainForm
         e As EventArgs
     )
 
+        AuditLogger.Log("Opened Room Management", "Viewed room records.")
         OpenPage(
             New RoomsForm(),
             "Room Management"
@@ -1634,6 +1663,7 @@ Public Class MainForm
         e As EventArgs
     )
 
+        AuditLogger.Log("Opened Payments", "Viewed payment records.")
         OpenPage(
             New PaymentsForm(),
             "Payments"
@@ -1651,11 +1681,24 @@ Public Class MainForm
         e As EventArgs
     )
 
+        AuditLogger.Log("Opened Reports", "Viewed reports and analytics.")
         OpenPage(
             New ReportsForm(),
             "Reports & Analytics"
         )
 
+    End Sub
+
+
+    Private Sub UserManagementClicked(
+        sender As Object,
+        e As EventArgs
+    )
+        If Not LoginForm.LoggedInRole.Equals("Admin", StringComparison.OrdinalIgnoreCase) Then
+            MessageBox.Show("Only Admin accounts can access User Management.", "Access denied", MessageBoxButtons.OK, MessageBoxIcon.Warning)
+            Return
+        End If
+        OpenPage(New UserManagementForm(), "User Management")
     End Sub
 
 
@@ -2013,6 +2056,8 @@ Public Class MainForm
 
         End If
 
+
+        AuditLogger.Log("Logged out", "User signed out of the application.")
 
         ' Clear the previous user's session before showing login.
         LoginForm.LoggedInUserID = 0
