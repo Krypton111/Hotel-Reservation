@@ -174,10 +174,14 @@ GO
 
 CREATE OR ALTER VIEW dbo.vw_RevenueSummary AS
 SELECT
-    YEAR(p.PaymentDate) AS PaymentYear,
-    MONTH(p.PaymentDate) AS PaymentMonth,
-    SUM(p.PaymentAmount) AS TotalPayments
+    COUNT_BIG(*) AS PaymentCount,
+    COALESCE(SUM(p.PaymentAmount), 0) AS TotalRevenue,
+    COALESCE(SUM(CASE WHEN p.PaymentMethod = 'Cash' THEN p.PaymentAmount ELSE 0 END), 0) AS CashRevenue,
+    COALESCE(SUM(CASE WHEN p.PaymentMethod = 'Credit Card' THEN p.PaymentAmount ELSE 0 END), 0) AS CreditCardRevenue,
+    COALESCE(SUM(CASE WHEN p.PaymentMethod = 'Debit Card' THEN p.PaymentAmount ELSE 0 END), 0) AS DebitCardRevenue,
+    COALESCE(SUM(CASE WHEN p.PaymentMethod = 'Bank Transfer' THEN p.PaymentAmount ELSE 0 END), 0) AS BankTransferRevenue,
+    COALESCE(SUM(CASE WHEN p.PaymentMethod = 'GCash' THEN p.PaymentAmount ELSE 0 END), 0) AS GCashRevenue,
+    COALESCE(SUM(CASE WHEN p.PaymentMethod = 'Maya' THEN p.PaymentAmount ELSE 0 END), 0) AS MayaRevenue
 FROM dbo.Payments p
-WHERE p.IsArchived = 0
-GROUP BY YEAR(p.PaymentDate), MONTH(p.PaymentDate);
+WHERE p.IsArchived = 0;
 GO
