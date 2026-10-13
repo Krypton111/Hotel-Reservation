@@ -66,6 +66,8 @@ Public Class PropertiesForm
     Private btnUpdate As Button
     Private btnDelete As Button
     Private btnClear As Button
+    Private btnViewArchived As Button
+    Private viewingArchived As Boolean = False
 
     Private dgvProperties As DataGridView
 
@@ -220,6 +222,15 @@ Public Class PropertiesForm
             )
 
         Me.Controls.Add(btnRefresh)
+
+        btnViewArchived = CreateButton(
+            "Show Archived",
+            New Point(595, 118),
+            New Size(145, 36),
+            CoffeeDark
+        )
+        Me.Controls.Add(btnViewArchived)
+        AddHandler btnViewArchived.Click, AddressOf ToggleArchivedProperties
 
 
         AddHandler btnSearch.Click,
@@ -623,7 +634,7 @@ Public Class PropertiesForm
 
         btnDelete =
             CreateButton(
-                "Delete",
+                "Archive",
                 New Point(880, 185),
                 New Size(105, 38),
                 Color.FromArgb(
@@ -654,7 +665,7 @@ Public Class PropertiesForm
             AddressOf UpdatePropertyClicked
 
         AddHandler btnDelete.Click,
-            AddressOf DeletePropertyClicked
+            AddressOf ArchivePropertyClicked
 
         AddHandler btnClear.Click,
             AddressOf ClearClicked
@@ -934,7 +945,8 @@ Public Class PropertiesForm
                     "PropertyStatus, " &
                     "PaymentStatus " &
                     "FROM Properties " &
-                    "WHERE IsActive = 1 " &
+                    "WHERE IsArchived = " & If(viewingArchived, "1", "0") & " " &
+                    If(viewingArchived, "", "AND IsActive = 1 ") &
                     "ORDER BY PropertyID DESC"
 
 
@@ -1140,6 +1152,11 @@ Public Class PropertiesForm
         e As EventArgs
     )
 
+        If viewingArchived Then
+            MessageBox.Show("Switch to active properties before adding a property.", "Archive View", MessageBoxButtons.OK, MessageBoxIcon.Information)
+            Return
+        End If
+
         If Not ValidateFields() Then
 
             Return
@@ -1239,6 +1256,11 @@ Public Class PropertiesForm
         sender As Object,
         e As EventArgs
     )
+
+        If viewingArchived Then
+            MessageBox.Show("Restore this property before editing it.", "Archive View", MessageBoxButtons.OK, MessageBoxIcon.Information)
+            Return
+        End If
 
         If selectedPropertyID = 0 Then
 
@@ -1340,105 +1362,80 @@ Public Class PropertiesForm
     ' DELETE PROPERTY
     '==========================================================
 
-    Private Sub DeletePropertyClicked(
+    Private Sub ArchivePropertyClicked(
         sender As Object,
         e As EventArgs
     )
 
-        If selectedPropertyID = 0 Then
-
+        If selectedPropertyID <= 0 Then
             MessageBox.Show(
                 "Please select a property first.",
-                "Casa Brew",
+                If(viewingArchived, "Restore Property", "Archive Property"),
                 MessageBoxButtons.OK,
-                MessageBoxIcon.Information
-            )
-
-            Return
-
-        End If
-
-
-        Dim answer As DialogResult =
-            MessageBox.Show(
-                "Are you sure you want to remove this property?",
-                "Confirm Delete",
-                MessageBoxButtons.YesNo,
                 MessageBoxIcon.Warning
             )
-
-
-        If answer =
-            DialogResult.No Then
-
             Return
-
         End If
 
+        Dim actionVerb As String = If(viewingArchived, "restore", "archive")
+        If MessageBox.Show(
+            "Are you sure you want to " & actionVerb & " this property?",
+            "Confirm " & If(viewingArchived, "Restore", "Archive"),
+            MessageBoxButtons.YesNo,
+            MessageBoxIcon.Question
+        ) <> DialogResult.Yes Then Return
 
         Try
-
-            Using connection =
-                DatabaseHelper.GetConnection()
-
+            Using connection = DatabaseHelper.GetConnection()
                 connection.Open()
 
-
-                '------------------------------------------------
-                ' SOFT DELETE
-                '------------------------------------------------
-
                 Dim sql As String =
-                    "UPDATE Properties " &
-                    "SET IsActive = 0 " &
+                    "UPDATE Properties SET IsArchived = @IsArchived, " &
+                    "ArchivedAt = CASE WHEN @IsArchived = 1 THEN SYSDATETIME() ELSE NULL END, " &
+                    "IsActive = @IsActive " &
                     "WHERE PropertyID = @PropertyID"
 
-
-                Using command As New SqlCommand(
-                    sql,
-                    connection
-                )
-
-                    command.Parameters.Add(
-                        "@PropertyID",
-                        SqlDbType.Int
-                    ).Value =
-                        selectedPropertyID
-
-
-                    command.ExecuteNonQuery()
-
+                Using command As New SqlCommand(sql, connection)
+                    command.Parameters.Add("@IsArchived", SqlDbType.Bit).Value = Not viewingArchived
+                    command.Parameters.Add("@IsActive", SqlDbType.Bit).Value = viewingArchived
+                    command.Parameters.Add("@PropertyID", SqlDbType.Int).Value = selectedPropertyID
+                    If command.ExecuteNonQuery() <> 1 Then
+                        Throw New InvalidOperationException("The property was not found or was not changed.")
+                    End If
                 End Using
-
             End Using
 
-
             MessageBox.Show(
-                "Property removed successfully.",
-                "Casa Brew",
+                If(viewingArchived, "Property restored successfully.", "Property archived successfully."),
+                "Property Management",
                 MessageBoxButtons.OK,
                 MessageBoxIcon.Information
             )
-
-
             LoadProperties()
-
             ClearFields()
 
-
         Catch ex As Exception
-
             MessageBox.Show(
-                "Unable to delete the property." &
-                Environment.NewLine &
-                Environment.NewLine &
-                ex.Message,
+                "Unable to " & actionVerb & " the property." & Environment.NewLine & Environment.NewLine & ex.Message,
                 "Database Error",
                 MessageBoxButtons.OK,
                 MessageBoxIcon.Error
             )
-
         End Try
+
+    End Sub
+
+
+    Private Sub ToggleArchivedProperties(sender As Object, e As EventArgs)
+
+        viewingArchived = Not viewingArchived
+        btnViewArchived.Text = If(viewingArchived, "Show Active", "Show Archived")
+        btnDelete.Text = If(viewingArchived, "Restore", "Archive")
+        btnAdd.Enabled = Not viewingArchived
+        btnUpdate.Enabled = Not viewingArchived
+        txtSearch.Clear()
+        LoadProperties()
+        ClearFields()
 
     End Sub
 
@@ -1487,7 +1484,8 @@ Public Class PropertiesForm
                     "PropertyStatus, " &
                     "PaymentStatus " &
                     "FROM Properties " &
-                    "WHERE IsActive = 1 " &
+                    "WHERE IsArchived = " & If(viewingArchived, "1", "0") & " " &
+                    If(viewingArchived, "", "AND IsActive = 1 ") &
                     "AND (" &
                     "CAST(PropertyID AS NVARCHAR(20)) LIKE @Search " &
                     "OR PropertyName LIKE @Search " &
