@@ -2251,6 +2251,37 @@ Dim sql As String =
                     roomID = Convert.ToInt32(value)
                 End Using
 
+                If Not viewingArchived Then
+                    Using statusCommand As New SqlCommand(
+                        "SELECT ReservationStatus FROM Reservations WHERE ReservationID = @ReservationID",
+                        connection
+                    )
+                        statusCommand.Parameters.Add("@ReservationID", SqlDbType.Int).Value = selectedReservationID
+                        Dim statusValue As Object = statusCommand.ExecuteScalar()
+                        Dim currentStatus As String = If(statusValue Is Nothing OrElse statusValue Is DBNull.Value, "", Convert.ToString(statusValue))
+
+                        If currentStatus = "Checked-In" Then
+                            MessageBox.Show(
+                                "A checked-in reservation cannot be archived while the guest is still checked in. Check the guest out first.",
+                                "Active Reservation",
+                                MessageBoxButtons.OK,
+                                MessageBoxIcon.Warning
+                            )
+                            Return
+                        End If
+
+                        If currentStatus = "Reserved" Then
+                            MessageBox.Show(
+                                "Cancel the reservation first if it should no longer remain active, then archive it.",
+                                "Active Reservation",
+                                MessageBoxButtons.OK,
+                                MessageBoxIcon.Warning
+                            )
+                            Return
+                        End If
+                    End Using
+                End If
+
                 If viewingArchived Then
                     Using dependencyCheck As New SqlCommand(
                         "SELECT COUNT(*) " &
