@@ -78,7 +78,7 @@ Public Class ReservationsForm
 
     Private btnAdd As Button
     Private btnUpdate As Button
-    Private btnDelete As Button
+    Private btnArchive As Button
     Private btnViewArchived As Button
     Private viewingArchived As Boolean = False
     Private btnClear As Button
@@ -845,10 +845,10 @@ Public Class ReservationsForm
 
 
         '======================================================
-        ' DELETE
+        ' ARCHIVE
         '======================================================
 
-        btnDelete =
+        btnArchive =
             CreateButton(
                 "Archive",
                 New Point(800, 305),
@@ -856,7 +856,7 @@ Public Class ReservationsForm
                 Rose
             )
 
-        formPanel.Controls.Add(btnDelete)
+        formPanel.Controls.Add(btnArchive)
 
 
         AddHandler btnClear.Click,
@@ -868,7 +868,7 @@ Public Class ReservationsForm
         AddHandler btnUpdate.Click,
             AddressOf UpdateReservationClicked
 
-        AddHandler btnDelete.Click,
+        AddHandler btnArchive.Click,
             AddressOf ArchiveReservationClicked
 
         btnViewArchived = CreateButton(
@@ -2323,7 +2323,7 @@ Dim sql As String =
 
         viewingArchived = Not viewingArchived
         btnViewArchived.Text = If(viewingArchived, "Show Active", "Show Archived")
-        btnDelete.Text = If(viewingArchived, "Restore", "Archive")
+        btnArchive.Text = If(viewingArchived, "Restore", "Archive")
         btnAdd.Enabled = Not viewingArchived
         btnUpdate.Enabled = Not viewingArchived
 
