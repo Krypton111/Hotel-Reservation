@@ -313,6 +313,15 @@ Public Class GuestsForm
                 False
             )
 
+        ' Keep form input lengths within the SQL Server column definitions.
+        txtFirstName.MaxLength = 80
+        txtLastName.MaxLength = 80
+        txtContactNumber.MaxLength = 30
+        txtEmail.MaxLength = 150
+        txtAddress.MaxLength = 250
+        txtCity.MaxLength = 100
+        txtCountry.MaxLength = 100
+
         '======================================================
         ' BUTTON PANEL
         '======================================================
@@ -1003,7 +1012,6 @@ Public Class GuestsForm
                     "(" &
                     "FirstName, " &
                     "LastName, " &
-                    "FullName, " &
                     "ContactNumber, " &
                     "Email, " &
                     "Address, " &
@@ -1014,7 +1022,6 @@ Public Class GuestsForm
                     "(" &
                     "@FirstName, " &
                     "@LastName, " &
-                    "@FullName, " &
                     "@ContactNumber, " &
                     "@Email, " &
                     "@Address, " &
@@ -1033,9 +1040,11 @@ Public Class GuestsForm
 
                     connection.Open()
 
-                    command.ExecuteNonQuery()
+                    If command.ExecuteNonQuery() <> 1 Then
+                        Throw New InvalidOperationException("The guest record was not found or was not changed.")
+                    End If
                     AuditLogger.Log("Changed guest data", "A guest record was created, updated, or otherwise changed.")
-                    AuditLogger.Log("Changed guest data", "A guest record was created, updated, or otherwise changed.")
+                    
 
                 End Using
 
@@ -1081,13 +1090,6 @@ Public Class GuestsForm
             100
         ).Value =
             txtLastName.Text.Trim()
-
-        command.Parameters.Add(
-            "@FullName",
-            SqlDbType.NVarChar,
-            200
-        ).Value =
-            txtFullName.Text.Trim()
 
         command.Parameters.Add(
             "@ContactNumber",
@@ -1147,27 +1149,16 @@ Public Class GuestsForm
 
         End If
 
-        If String.IsNullOrWhiteSpace(
-            txtCountry.Text
-        ) Then
-
-            command.Parameters.Add(
-                "@Country",
-                SqlDbType.NVarChar,
-                100
-            ).Value =
-                DBNull.Value
-
-        Else
-
-            command.Parameters.Add(
-                "@Country",
-                SqlDbType.NVarChar,
-                100
-            ).Value =
+        command.Parameters.Add(
+            "@Country",
+            SqlDbType.NVarChar,
+            100
+        ).Value =
+            If(
+                String.IsNullOrWhiteSpace(txtCountry.Text),
+                "Philippines",
                 txtCountry.Text.Trim()
-
-        End If
+            )
 
     End Sub
 
@@ -1208,8 +1199,7 @@ Public Class GuestsForm
                     "UPDATE Guests SET " &
                     "FirstName = @FirstName, " &
                     "LastName = @LastName, " &
-                    "FullName = @FullName, " &
-                    "ContactNumber = @ContactNumber, " &
+                    "ContactNumber = @ContactNumber, "
                     "Email = @Email, " &
                     "Address = @Address, " &
                     "City = @City, " &
@@ -1235,7 +1225,7 @@ Public Class GuestsForm
 
                     command.ExecuteNonQuery()
                     AuditLogger.Log("Changed guest data", "A guest record was created, updated, or otherwise changed.")
-                    AuditLogger.Log("Changed guest data", "A guest record was created, updated, or otherwise changed.")
+                    
 
                 End Using
 
@@ -1334,7 +1324,7 @@ Public Class GuestsForm
 
                     command.ExecuteNonQuery()
                     AuditLogger.Log("Changed guest data", "A guest record was created, updated, or otherwise changed.")
-                    AuditLogger.Log("Changed guest data", "A guest record was created, updated, or otherwise changed.")
+                    
 
                 End Using
 
