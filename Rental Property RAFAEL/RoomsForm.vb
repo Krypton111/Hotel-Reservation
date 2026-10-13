@@ -549,10 +549,6 @@ Public Class RoomsForm
         dgvRooms.Dock =
             DockStyle.Fill
 
-        dgvRooms.ScrollBars = ScrollBars.Both
-        dgvRooms.AutoSizeRowsMode = DataGridViewAutoSizeRowsMode.None
-        dgvRooms.AllowUserToResizeRows = False
-        dgvRooms.RowTemplate.Height = 34
         dgvRooms.StandardTab = True
 
         dgvRooms.BackgroundColor =
@@ -782,10 +778,10 @@ Public Class RoomsForm
 
             Dim sql As String =
                 "INSERT INTO Rooms " &
-                "(RoomNumber, RoomType, Capacity, " &
+                "(RoomNumber, RoomType, Capacity, BedType, " &
                 "RatePerNight, Status, FloorNumber, Description) " &
                 "VALUES " &
-                "(@RoomNumber, @RoomType, @Capacity, " &
+                "(@RoomNumber, @RoomType, @Capacity, @BedType, " &
                 "@RatePerNight, @Status, @FloorNumber, @Description)"
 
             Using connection =
@@ -890,6 +886,7 @@ Public Class RoomsForm
                 "RoomNumber = @RoomNumber, " &
                 "RoomType = @RoomType, " &
                 "Capacity = @Capacity, " &
+                "BedType = @BedType, "
                 "RatePerNight = @RatePerNight, " &
                 "Status = @Status, " &
                 "FloorNumber = @FloorNumber, " &
@@ -1072,6 +1069,24 @@ Public Class RoomsForm
     ' ADD ROOM PARAMETERS
     '===========================================================
 
+    Private Function GetBedTypeForRoomType() As String
+
+        Select Case cboRoomType.Text
+            Case "Standard Room"
+                Return "Queen Bed"
+            Case "Deluxe Room", "Superior Room", "Executive Room"
+                Return "King Bed"
+            Case "Junior Suite"
+                Return "King Bed + Sofa"
+            Case "Presidential Suite"
+                Return "King Bed + Living Area"
+            Case Else
+                Return "Queen Bed"
+        End Select
+
+    End Function
+
+
     Private Sub AddRoomParameters(
         command As SqlCommand
     )
@@ -1091,6 +1106,11 @@ Public Class RoomsForm
             Convert.ToInt32(
                 nudCapacity.Value
             )
+        )
+
+        command.Parameters.AddWithValue(
+            "@BedType",
+            GetBedTypeForRoomType()
         )
 
 
