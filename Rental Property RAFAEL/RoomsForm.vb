@@ -267,7 +267,7 @@ Public Class RoomsForm
             DockStyle.Top
 
         formPanel.Height =
-            315
+            285
 
         formPanel.BackColor =
             WarmWhite
@@ -276,6 +276,7 @@ Public Class RoomsForm
             BorderStyle.FixedSingle
 
         formPanel.AutoScroll = False
+        formPanel.Padding = New Padding(4)
 
         contentPanel.Controls.Add(
             formPanel
@@ -296,503 +297,213 @@ Public Class RoomsForm
 
     Private Sub BuildRoomFields()
 
-        '-------------------------------------------------------
-        ' ROOM ID
-        '-------------------------------------------------------
+        ' Use a table-based layout instead of fixed pixel coordinates.
+        ' Every input gets its own cell, so later controls cannot cover it.
+        Dim editorLayout As New TableLayoutPanel()
 
-        roomIDLabel = CreateLabel(
-            "Room ID",
-            New Point(25, 20)
-        )
+        editorLayout.Dock = DockStyle.Fill
+        editorLayout.Margin = New Padding(0)
+        editorLayout.Padding = New Padding(8)
+        editorLayout.ColumnCount = 4
+        editorLayout.RowCount = 4
+        editorLayout.GrowStyle = TableLayoutPanelGrowStyle.FixedSize
 
-        formPanel.Controls.Add(
-            roomIDLabel
-        )
-
-
-        txtRoomID = New TextBox()
-
-        txtRoomID.Location =
-            New Point(25, 47)
-
-        txtRoomID.Size =
-            New Size(145, 30)
-
-        txtRoomID.ReadOnly =
-            True
-
-        txtRoomID.BackColor =
-            Color.FromArgb(
-                238,
-                235,
-                228
+        For i As Integer = 0 To 3
+            editorLayout.ColumnStyles.Add(
+                New ColumnStyle(SizeType.Percent, 25.0F)
             )
-
-        formPanel.Controls.Add(
-            txtRoomID
-        )
-
-
-        '-------------------------------------------------------
-        ' ROOM NUMBER
-        '-------------------------------------------------------
-
-        roomNumberLabel = CreateLabel(
-            "Room Number *",
-            New Point(190, 20)
-        )
-
-        formPanel.Controls.Add(
-            roomNumberLabel
-        )
-
-
-        txtRoomNumber = New TextBox()
-
-        txtRoomNumber.Location =
-            New Point(190, 47)
-
-        txtRoomNumber.Size =
-            New Size(145, 30)
-
-        txtRoomNumber.TabIndex = 1
-
-        txtRoomNumber.MaxLength =
-            20
-
-        formPanel.Controls.Add(
-            txtRoomNumber
-        )
-
-
-        '-------------------------------------------------------
-        ' ROOM TYPE
-        '-------------------------------------------------------
-
-        roomTypeLabel = CreateLabel(
-            "Room Type *",
-            New Point(355, 20)
-        )
-
-        formPanel.Controls.Add(
-            roomTypeLabel
-        )
-
-
-        cboRoomType = New ComboBox()
-
-        cboRoomType.Location =
-            New Point(355, 47)
-
-        cboRoomType.Size =
-            New Size(220, 30)
-
-        cboRoomType.DropDownStyle =
-            ComboBoxStyle.DropDownList
-
-        cboRoomType.Items.Add(
-            "Standard Room"
-        )
-
-        cboRoomType.Items.Add(
-            "Deluxe Room"
-        )
-
-        cboRoomType.Items.Add(
-            "Superior Room"
-        )
-
-        cboRoomType.Items.Add(
-            "Executive Room"
-        )
-
-        cboRoomType.Items.Add(
-            "Junior Suite"
-        )
-
-        cboRoomType.Items.Add(
-            "Presidential Suite"
-        )
-
-        formPanel.Controls.Add(
-            cboRoomType
-        )
-
-
-        '-------------------------------------------------------
-        ' CAPACITY
-        '-------------------------------------------------------
-
-        capacityLabel = CreateLabel(
-            "Capacity *",
-            New Point(595, 20)
-        )
-
-        formPanel.Controls.Add(
-            capacityLabel
-        )
-
-
-        nudCapacity = New NumericUpDown()
-
-        nudCapacity.Location =
-            New Point(595, 47)
-
-        nudCapacity.Size =
-            New Size(100, 30)
-
-        nudCapacity.Minimum =
-            1
-
-        nudCapacity.Maximum =
-            20
-
-        nudCapacity.Value =
-            2
-
-        formPanel.Controls.Add(
-            nudCapacity
-        )
-
-
-        '-------------------------------------------------------
-        ' RATE
-        '-------------------------------------------------------
-
-        rateLabel = CreateLabel(
-            "Rate Per Night *",
-            New Point(715, 20)
-        )
-
-        formPanel.Controls.Add(
-            rateLabel
-        )
-
-
-        txtRate = New TextBox()
-
-        txtRate.Location =
-            New Point(715, 47)
-
-        txtRate.Size =
-            New Size(145, 30)
-
-        formPanel.Controls.Add(
-            txtRate
-        )
-
-
-        '-------------------------------------------------------
-        ' FLOOR
-        ' Database column: FloorNumber
-        '-------------------------------------------------------
-
-        floorLabel = CreateLabel(
-            "Floor *",
-            New Point(880, 20)
-        )
-
-        formPanel.Controls.Add(
-            floorLabel
-        )
-
-
-        nudFloor = New NumericUpDown()
-
-        nudFloor.Location =
-            New Point(880, 47)
-
-        nudFloor.Size =
-            New Size(90, 30)
-
-        nudFloor.Minimum =
-            1
-
-        nudFloor.Maximum =
-            100
-
-        nudFloor.Value =
-            1
-
-        formPanel.Controls.Add(
-            nudFloor
-        )
-
-
-        '-------------------------------------------------------
-        ' STATUS
-        '-------------------------------------------------------
-
-        statusFieldLabel = CreateLabel(
-            "Room Status *",
-            New Point(990, 20)
-        )
-
-        formPanel.Controls.Add(
-            statusFieldLabel
-        )
-
-
-        cboStatus = New ComboBox()
-
-        cboStatus.Location =
-            New Point(990, 47)
-
-        cboStatus.Size =
-            New Size(170, 30)
-
-        cboStatus.DropDownStyle =
-            ComboBoxStyle.DropDownList
-
-        cboStatus.Items.Add(
-            "Available"
-        )
-
-        cboStatus.Items.Add(
-            "Reserved"
-        )
-
-        cboStatus.Items.Add(
-            "Occupied"
-        )
-
-        cboStatus.Items.Add(
-            "Maintenance"
-        )
-
-        formPanel.Controls.Add(
-            cboStatus
-        )
-
-
-        '-------------------------------------------------------
-        ' DESCRIPTION
-        '-------------------------------------------------------
-
-        descriptionLabel = CreateLabel(
-            "Description",
-            New Point(25, 95)
-        )
-
-        formPanel.Controls.Add(
-            descriptionLabel
-        )
-
-
-        txtDescription = New TextBox()
-
-        txtDescription.Location =
-            New Point(25, 120)
-
-        txtDescription.Size =
-            New Size(
-                1135,
-                55
-            )
-
-        txtDescription.Anchor =
-            AnchorStyles.Top Or AnchorStyles.Left Or AnchorStyles.Right
-
-        txtDescription.Multiline =
-            True
-
-        txtDescription.ScrollBars =
-            ScrollBars.Vertical
-
-        txtDescription.MaxLength =
-            500
-
-        formPanel.Controls.Add(
-            txtDescription
-        )
-
-
-        '-------------------------------------------------------
-        ' SEARCH
-        '-------------------------------------------------------
-
-        searchLabel = CreateLabel(
-            "Search Rooms",
-            New Point(25, 185)
-        )
-
-        formPanel.Controls.Add(
-            searchLabel
-        )
-
-
-        txtSearch = New TextBox()
-
-        txtSearch.Location =
-            New Point(25, 210)
-
-        txtSearch.Size =
-            New Size(
-                300,
-                30
-            )
-
-        txtSearch.PlaceholderText =
-            "Room number, type or status..."
-
-        formPanel.Controls.Add(
-            txtSearch
-        )
-
-
-        '-------------------------------------------------------
-        ' BUTTONS
-        '-------------------------------------------------------
-
-        btnAdd = CreateButton(
-            "Add Room",
-            New Point(350, 205),
-            New Size(110, 40),
-            Color.FromArgb(
-                72,
-                91,
-                79
-            )
-        )
-
-        AddHandler btnAdd.Click,
-            AddressOf AddButton_Click
-
-        formPanel.Controls.Add(
-            btnAdd
-        )
-
-
-        btnUpdate = CreateButton(
-            "Update",
-            New Point(470, 205),
-            New Size(110, 40),
-            Navy
-        )
-
-        AddHandler btnUpdate.Click,
-            AddressOf UpdateButton_Click
-
-        formPanel.Controls.Add(
-            btnUpdate
-        )
-
-
-        btnDelete = CreateButton(
-            "Delete",
-            New Point(590, 205),
-            New Size(110, 40),
-            Color.FromArgb(
-                116,
-                70,
-                65
-            )
-        )
-
-        AddHandler btnDelete.Click,
-            AddressOf DeleteButton_Click
-
-        formPanel.Controls.Add(
-            btnDelete
-        )
-
-
-        btnClear = CreateButton(
-            "Clear",
-            New Point(710, 205),
-            New Size(100, 40),
-            Color.FromArgb(
-                108,
-                105,
-                98
-            )
-        )
-
-        AddHandler btnClear.Click,
-            AddressOf ClearButton_Click
-
-        formPanel.Controls.Add(
-            btnClear
-        )
-
-
-        btnSearch = CreateButton(
-            "Search",
-            New Point(820, 205),
-            New Size(100, 40),
-            Color.FromArgb(
-                91,
-                75,
-                52
-            )
-        )
-
-        AddHandler btnSearch.Click,
-            AddressOf SearchButton_Click
-
-        formPanel.Controls.Add(
-            btnSearch
-        )
-
-
-        btnRefresh = CreateButton(
-            "Refresh",
-            New Point(930, 205),
-            New Size(100, 40),
-            Color.FromArgb(
-                69,
-                82,
-                91
-            )
-        )
-
-        AddHandler btnRefresh.Click,
-            AddressOf RefreshButton_Click
-
-        formPanel.Controls.Add(
-            btnRefresh
-        )
-
-
-        btnClose = CreateButton(
-            "Close",
-            New Point(1040, 205),
-            New Size(100, 40),
-            Color.FromArgb(
-                108,
-                105,
-                98
-            )
-        )
-
-        AddHandler btnClose.Click,
-            AddressOf CloseButton_Click
-
-        formPanel.Controls.Add(
-            btnClose
-        )
-
-        ' Keep the input row in front of other editor controls.
-        ' This prevents the description/search region from obscuring
-        ' the fields required by Add Room.
-        For Each control As Control In {
-            roomIDLabel, txtRoomID,
-            roomNumberLabel, txtRoomNumber,
-            roomTypeLabel, cboRoomType,
-            capacityLabel, nudCapacity,
-            rateLabel, txtRate,
-            floorLabel, nudFloor,
-            statusFieldLabel, cboStatus
-        }
-            control.Visible = True
-            control.BringToFront()
         Next
 
+        editorLayout.RowStyles.Add(New RowStyle(SizeType.Absolute, 64.0F))
+        editorLayout.RowStyles.Add(New RowStyle(SizeType.Absolute, 64.0F))
+        editorLayout.RowStyles.Add(New RowStyle(SizeType.Percent, 100.0F))
+        editorLayout.RowStyles.Add(New RowStyle(SizeType.Absolute, 56.0F))
+
+        ' Room ID
+        roomIDLabel = CreateLabel("Room ID", Point.Empty)
+        txtRoomID = New TextBox()
+        txtRoomID.ReadOnly = True
+        txtRoomID.BackColor = Color.FromArgb(238, 235, 228)
+        txtRoomID.Dock = DockStyle.Fill
+        editorLayout.Controls.Add(CreateRoomFieldCell(roomIDLabel, txtRoomID), 0, 0)
+
+        ' Room number
+        roomNumberLabel = CreateLabel("Room Number *", Point.Empty)
+        txtRoomNumber = New TextBox()
+        txtRoomNumber.MaxLength = 20
+        txtRoomNumber.Dock = DockStyle.Fill
         txtRoomNumber.TabIndex = 0
-        txtRoomNumber.Visible = True
-        txtRoomNumber.BringToFront()
+        editorLayout.Controls.Add(CreateRoomFieldCell(roomNumberLabel, txtRoomNumber), 1, 0)
+
+        ' Room type
+        roomTypeLabel = CreateLabel("Room Type *", Point.Empty)
+        cboRoomType = New ComboBox()
+        cboRoomType.DropDownStyle = ComboBoxStyle.DropDownList
+        cboRoomType.Dock = DockStyle.Fill
+        cboRoomType.Items.AddRange(New Object() {
+            "Standard Room",
+            "Deluxe Room",
+            "Superior Room",
+            "Executive Room",
+            "Junior Suite",
+            "Presidential Suite"
+        })
+        editorLayout.Controls.Add(CreateRoomFieldCell(roomTypeLabel, cboRoomType), 2, 0)
+
+        ' Capacity
+        capacityLabel = CreateLabel("Capacity *", Point.Empty)
+        nudCapacity = New NumericUpDown()
+        nudCapacity.Minimum = 1
+        nudCapacity.Maximum = 20
+        nudCapacity.Value = 2
+        nudCapacity.Dock = DockStyle.Fill
+        editorLayout.Controls.Add(CreateRoomFieldCell(capacityLabel, nudCapacity), 3, 0)
+
+        ' Rate per night
+        rateLabel = CreateLabel("Rate Per Night *", Point.Empty)
+        txtRate = New TextBox()
+        txtRate.Dock = DockStyle.Fill
+        editorLayout.Controls.Add(CreateRoomFieldCell(rateLabel, txtRate), 0, 1)
+
+        ' Floor number
+        floorLabel = CreateLabel("Floor *", Point.Empty)
+        nudFloor = New NumericUpDown()
+        nudFloor.Minimum = 1
+        nudFloor.Maximum = 100
+        nudFloor.Value = 1
+        nudFloor.Dock = DockStyle.Fill
+        editorLayout.Controls.Add(CreateRoomFieldCell(floorLabel, nudFloor), 1, 1)
+
+        ' Room status
+        statusFieldLabel = CreateLabel("Room Status *", Point.Empty)
+        cboStatus = New ComboBox()
+        cboStatus.DropDownStyle = ComboBoxStyle.DropDownList
+        cboStatus.Dock = DockStyle.Fill
+        cboStatus.Items.AddRange(New Object() {
+            "Available",
+            "Reserved",
+            "Occupied",
+            "Maintenance"
+        })
+        editorLayout.Controls.Add(CreateRoomFieldCell(statusFieldLabel, cboStatus), 2, 1)
+
+        ' Description spans the full editor width.
+        Dim descriptionCell As New TableLayoutPanel()
+        descriptionCell.Dock = DockStyle.Fill
+        descriptionCell.Margin = New Padding(4)
+        descriptionCell.Padding = New Padding(3, 0, 3, 2)
+        descriptionCell.ColumnCount = 1
+        descriptionCell.RowCount = 2
+        descriptionCell.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 100.0F))
+        descriptionCell.RowStyles.Add(New RowStyle(SizeType.Absolute, 24.0F))
+        descriptionCell.RowStyles.Add(New RowStyle(SizeType.Percent, 100.0F))
+
+        descriptionLabel = CreateLabel("Description", Point.Empty)
+        descriptionLabel.Dock = DockStyle.Fill
+
+        txtDescription = New TextBox()
+        txtDescription.Dock = DockStyle.Fill
+        txtDescription.Multiline = True
+        txtDescription.ScrollBars = ScrollBars.Vertical
+        txtDescription.MaxLength = 500
+
+        descriptionCell.Controls.Add(descriptionLabel, 0, 0)
+        descriptionCell.Controls.Add(txtDescription, 0, 1)
+        editorLayout.Controls.Add(descriptionCell, 0, 2)
+        editorLayout.SetColumnSpan(descriptionCell, 4)
+
+        ' Search cell
+        Dim searchCell As New TableLayoutPanel()
+        searchCell.Dock = DockStyle.Fill
+        searchCell.Margin = New Padding(4)
+        searchCell.Padding = New Padding(3, 0, 3, 2)
+        searchCell.ColumnCount = 1
+        searchCell.RowCount = 2
+        searchCell.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 100.0F))
+        searchCell.RowStyles.Add(New RowStyle(SizeType.Absolute, 24.0F))
+        searchCell.RowStyles.Add(New RowStyle(SizeType.Percent, 100.0F))
+
+        searchLabel = CreateLabel("Search Rooms", Point.Empty)
+        searchLabel.Dock = DockStyle.Fill
+
+        txtSearch = New TextBox()
+        txtSearch.Dock = DockStyle.Fill
+        txtSearch.PlaceholderText = "Room number, type or status..."
+
+        searchCell.Controls.Add(searchLabel, 0, 0)
+        searchCell.Controls.Add(txtSearch, 0, 1)
+        editorLayout.Controls.Add(searchCell, 0, 3)
+
+        ' Actions occupy the remaining three columns and wrap on smaller windows.
+        Dim actionsPanel As New FlowLayoutPanel()
+        actionsPanel.Dock = DockStyle.Fill
+        actionsPanel.Margin = New Padding(2)
+        actionsPanel.Padding = New Padding(0, 7, 0, 0)
+        actionsPanel.FlowDirection = FlowDirection.LeftToRight
+        actionsPanel.WrapContents = True
+        actionsPanel.AutoScroll = True
+
+        btnAdd = CreateButton("Add Room", Point.Empty, New Size(110, 38), Color.FromArgb(72, 91, 79))
+        AddHandler btnAdd.Click, AddressOf AddButton_Click
+
+        btnUpdate = CreateButton("Update", Point.Empty, New Size(100, 38), Navy)
+        AddHandler btnUpdate.Click, AddressOf UpdateButton_Click
+
+        btnDelete = CreateButton("Delete", Point.Empty, New Size(100, 38), Color.FromArgb(116, 70, 65))
+        AddHandler btnDelete.Click, AddressOf DeleteButton_Click
+
+        btnClear = CreateButton("Clear", Point.Empty, New Size(90, 38), Color.FromArgb(108, 105, 98))
+        AddHandler btnClear.Click, AddressOf ClearButton_Click
+
+        btnSearch = CreateButton("Search", Point.Empty, New Size(95, 38), Color.FromArgb(91, 75, 52))
+        AddHandler btnSearch.Click, AddressOf SearchButton_Click
+
+        btnRefresh = CreateButton("Refresh", Point.Empty, New Size(95, 38), Color.FromArgb(69, 82, 91))
+        AddHandler btnRefresh.Click, AddressOf RefreshButton_Click
+
+        btnClose = CreateButton("Close", Point.Empty, New Size(90, 38), Color.FromArgb(108, 105, 98))
+        AddHandler btnClose.Click, AddressOf CloseButton_Click
+
+        actionsPanel.Controls.AddRange(New Control() {
+            btnAdd, btnUpdate, btnDelete, btnClear,
+            btnSearch, btnRefresh, btnClose
+        })
+
+        editorLayout.Controls.Add(actionsPanel, 1, 3)
+        editorLayout.SetColumnSpan(actionsPanel, 3)
+
+        formPanel.Controls.Clear()
+        formPanel.Controls.Add(editorLayout)
 
     End Sub
+
+
+    Private Function CreateRoomFieldCell(
+        fieldLabel As Label,
+        inputControl As Control
+    ) As TableLayoutPanel
+
+        Dim cell As New TableLayoutPanel()
+        cell.Dock = DockStyle.Fill
+        cell.Margin = New Padding(4)
+        cell.Padding = New Padding(3, 0, 3, 2)
+        cell.ColumnCount = 1
+        cell.RowCount = 2
+        cell.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 100.0F))
+        cell.RowStyles.Add(New RowStyle(SizeType.Absolute, 24.0F))
+        cell.RowStyles.Add(New RowStyle(SizeType.Percent, 100.0F))
+
+        fieldLabel.Dock = DockStyle.Fill
+        fieldLabel.Margin = New Padding(0)
+        inputControl.Dock = DockStyle.Fill
+        inputControl.Margin = New Padding(0, 1, 0, 0)
+
+        cell.Controls.Add(fieldLabel, 0, 0)
+        cell.Controls.Add(inputControl, 0, 1)
+
+        Return cell
+
+    End Function
 
 
     '===========================================================
