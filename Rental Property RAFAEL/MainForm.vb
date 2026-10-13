@@ -15,6 +15,8 @@ Public Class MainForm
     Private pnlContent As Panel
     Private pnlPageHeader As Panel
     Private pnlPageHost As Panel
+    Private pnlDashboardStats As FlowLayoutPanel
+    Private pnlDashboardPanels As FlowLayoutPanel
 
     Private lblPageTitle As Label
     Private lblUser As Label
@@ -836,6 +838,8 @@ Public Class MainForm
 
         ClearPageHost()
 
+        pnlPageHost.AutoScroll = True
+
         lblPageTitle.Text =
             "Dashboard"
 
@@ -904,6 +908,28 @@ Public Class MainForm
             lblDate
         )
 
+
+        '-------------------------------------------------------
+        ' STATISTICS LAYOUT
+        '-------------------------------------------------------
+
+        pnlDashboardStats = New FlowLayoutPanel()
+
+        pnlDashboardStats.Location = New Point(30, 90)
+        pnlDashboardStats.Size = New Size(
+            Math.Max(300, pnlPageHost.ClientSize.Width - 60),
+            250
+        )
+        pnlDashboardStats.Anchor =
+            AnchorStyles.Top Or AnchorStyles.Left Or AnchorStyles.Right
+        pnlDashboardStats.WrapContents = True
+        pnlDashboardStats.FlowDirection = FlowDirection.LeftToRight
+        pnlDashboardStats.AutoScroll = False
+        pnlDashboardStats.Margin = New Padding(0)
+        pnlDashboardStats.Padding = New Padding(0)
+        pnlDashboardStats.BackColor = Color.Transparent
+
+        pnlPageHost.Controls.Add(pnlDashboardStats)
 
         '-------------------------------------------------------
         ' STATISTICS
@@ -1001,20 +1027,40 @@ Public Class MainForm
 
 
         '-------------------------------------------------------
+        ' RESPONSIVE OVERVIEW / QUICK ACTIONS LAYOUT
+        '-------------------------------------------------------
+
+        pnlDashboardPanels = New FlowLayoutPanel()
+
+        pnlDashboardPanels.Location = New Point(30, 355)
+        pnlDashboardPanels.Size = New Size(
+            Math.Max(300, pnlPageHost.ClientSize.Width - 60),
+            620
+        )
+        pnlDashboardPanels.Anchor =
+            AnchorStyles.Top Or AnchorStyles.Left Or AnchorStyles.Right
+        pnlDashboardPanels.WrapContents = True
+        pnlDashboardPanels.FlowDirection = FlowDirection.LeftToRight
+        pnlDashboardPanels.AutoScroll = False
+        pnlDashboardPanels.Margin = New Padding(0)
+        pnlDashboardPanels.Padding = New Padding(0)
+        pnlDashboardPanels.BackColor = Color.Transparent
+
+        pnlPageHost.Controls.Add(pnlDashboardPanels)
+
+        '-------------------------------------------------------
         ' OVERVIEW PANEL
         '-------------------------------------------------------
 
         Dim infoPanel As New Panel()
 
-        infoPanel.Location =
-            New Point(
-                30,
-                160
-            )
+        infoPanel.Location = New Point(0, 0)
+
+        infoPanel.Margin = New Padding(0, 0, 18, 18)
 
         infoPanel.Size =
             New Size(
-                750,
+                700,
                 285
             )
 
@@ -1024,7 +1070,7 @@ Public Class MainForm
         infoPanel.BorderStyle =
             BorderStyle.FixedSingle
 
-        pnlPageHost.Controls.Add(
+        pnlDashboardPanels.Controls.Add(
             infoPanel
         )
 
@@ -1161,15 +1207,12 @@ Public Class MainForm
 
         Dim quickPanel As New Panel()
 
-        quickPanel.Location =
-            New Point(
-                810,
-                160
-            )
+        quickPanel.Location = New Point(0, 0)
+        quickPanel.Margin = New Padding(0, 0, 0, 18)
 
         quickPanel.Size =
             New Size(
-                350,
+                330,
                 285
             )
 
@@ -1179,7 +1222,7 @@ Public Class MainForm
         quickPanel.BorderStyle =
             BorderStyle.FixedSingle
 
-        pnlPageHost.Controls.Add(
+        pnlDashboardPanels.Controls.Add(
             quickPanel
         )
 
@@ -1286,11 +1329,8 @@ Public Class MainForm
 
         Dim panel As New Panel()
 
-        panel.Location =
-            New Point(
-                x,
-                90
-            )
+        panel.Location = New Point(0, 0)
+        panel.Margin = New Padding(0, 0, 8, 8)
 
         panel.Size =
             New Size(
@@ -1304,7 +1344,7 @@ Public Class MainForm
         panel.BorderStyle =
             BorderStyle.FixedSingle
 
-        pnlPageHost.Controls.Add(
+        pnlDashboardStats.Controls.Add(
             panel
         )
 
@@ -2020,6 +2060,22 @@ Public Class MainForm
                 btnLogout.Height -
                 25
             )
+
+        If pnlDashboardStats IsNot Nothing AndAlso
+           Not pnlDashboardStats.IsDisposed Then
+
+            pnlDashboardStats.Width =
+                Math.Max(300, pnlPageHost.ClientSize.Width - 60)
+
+        End If
+
+        If pnlDashboardPanels IsNot Nothing AndAlso
+           Not pnlDashboardPanels.IsDisposed Then
+
+            pnlDashboardPanels.Width =
+                Math.Max(300, pnlPageHost.ClientSize.Width - 60)
+
+        End If
 
     End Sub
 
