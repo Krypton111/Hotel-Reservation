@@ -535,6 +535,13 @@ Public Class GuestsForm
         dgvGuests.RowHeadersVisible =
             False
 
+        ' Keep both scrollbars available so every guest row and column can be reached.
+        dgvGuests.ScrollBars = ScrollBars.Both
+        dgvGuests.ColumnHeadersVisible = True
+        dgvGuests.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize
+        dgvGuests.RowTemplate.Height = 28
+        dgvGuests.AutoSizeRowsMode = DataGridViewAutoSizeRowsMode.None
+
         dgvGuests.AutoSizeColumnsMode =
             DataGridViewAutoSizeColumnsMode.Fill
 
@@ -570,9 +577,30 @@ Public Class GuestsForm
         dgvGuests.DefaultCellStyle.SelectionForeColor =
             Charcoal
 
-        mainPanel.Controls.Add(
-            dgvGuests
-        )
+        mainPanel.Controls.Add(dgvGuests)
+
+        ' The list heading has its own docked panel above the table.
+        Dim guestListHeader As New Panel()
+        guestListHeader.Dock = DockStyle.Top
+        guestListHeader.Height = 38
+        guestListHeader.BackColor = Ivory
+
+        Dim lblGuestList As New Label()
+        lblGuestList.Text = "GUEST LIST"
+        lblGuestList.Dock = DockStyle.Fill
+        lblGuestList.TextAlign = ContentAlignment.MiddleLeft
+        lblGuestList.Font = New Font("Segoe UI Semibold", 10.0F, FontStyle.Bold)
+        lblGuestList.ForeColor = DeepNavy
+        guestListHeader.Controls.Add(lblGuestList)
+        mainPanel.Controls.Add(guestListHeader)
+
+        ' WinForms docking is z-order-sensitive. Put the fill grid behind
+        ' the top-docked panels so it occupies only the remaining area.
+        mainPanel.Controls.SetChildIndex(dgvGuests, mainPanel.Controls.Count - 1)
+        mainPanel.Controls.SetChildIndex(guestListHeader, 0)
+        mainPanel.Controls.SetChildIndex(searchPanel, 0)
+        mainPanel.Controls.SetChildIndex(buttonPanel, 0)
+        mainPanel.Controls.SetChildIndex(formPanel, 0)
 
         '======================================================
         ' EVENTS
