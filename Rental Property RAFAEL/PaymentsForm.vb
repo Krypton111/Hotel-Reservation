@@ -75,6 +75,8 @@ Public Class PaymentsForm
     Private btnAdd As Button
     Private btnUpdate As Button
     Private btnDelete As Button
+    Private btnViewArchived As Button
+    Private viewingArchived As Boolean = False
     Private btnClear As Button
 
     Private dgvPayments As DataGridView
@@ -736,13 +738,21 @@ Public Class PaymentsForm
 
         btnDelete =
             CreateButton(
-                "Delete",
+                "Archive",
                 New Point(395, 250),
                 New Size(110, 40),
                 Rose
             )
 
         formPanel.Controls.Add(btnDelete)
+
+        btnViewArchived = CreateButton(
+            "Show Archived",
+            New Point(520, 250),
+            New Size(150, 40),
+            Sage
+        )
+        formPanel.Controls.Add(btnViewArchived)
 
 
         AddHandler btnClear.Click,
@@ -755,7 +765,10 @@ Public Class PaymentsForm
             AddressOf UpdatePaymentClicked
 
         AddHandler btnDelete.Click,
-            AddressOf DeletePaymentClicked
+            AddressOf ArchivePaymentClicked
+
+        AddHandler btnViewArchived.Click,
+            AddressOf ToggleArchivedPayments
 
 
         '======================================================
@@ -1310,7 +1323,7 @@ Public Class PaymentsForm
                 Dim sql As String =
                     "SELECT ISNULL(SUM(PaymentAmount), 0) " &
                     "FROM Payments " &
-                    "WHERE ReservationID = @ReservationID"
+                    "WHERE ReservationID = @ReservationID AND IsArchived = 0"
 
 
                 Using command As New SqlCommand(
@@ -1459,6 +1472,7 @@ Public Class PaymentsForm
                     "ON r.GuestID = g.GuestID " &
                     "INNER JOIN Rooms rm " &
                     "ON r.RoomID = rm.RoomID " &
+                    "WHERE p.IsArchived = " & If(viewingArchived, "1", "0") & " " &
                     "ORDER BY p.PaymentID DESC"
 
 
@@ -1626,6 +1640,11 @@ Public Class PaymentsForm
         sender As Object,
         e As EventArgs
     )
+
+        If viewingArchived Then
+            MessageBox.Show("Switch to active payments before adding a payment.", "Archive View", MessageBoxButtons.OK, MessageBoxIcon.Information)
+            Return
+        End If
 
         If Not ValidatePayment() Then
 
@@ -1797,6 +1816,11 @@ Public Class PaymentsForm
         sender As Object,
         e As EventArgs
     )
+
+        If viewingArchived Then
+            MessageBox.Show("Restore this payment before editing it.", "Archive View", MessageBoxButtons.OK, MessageBoxIcon.Information)
+            Return
+        End If
 
         If selectedPaymentID = 0 Then
 
@@ -1981,117 +2005,93 @@ Public Class PaymentsForm
     ' DELETE PAYMENT
     '==========================================================
 
-    Private Sub DeletePaymentClicked(
+    Private Sub ArchivePaymentClicked(
         sender As Object,
         e As EventArgs
     )
 
-        If selectedPaymentID = 0 Then
-
+        If selectedPaymentID <= 0 Then
             MessageBox.Show(
                 "Please select a payment first.",
-                "Delete Payment",
+                If(viewingArchived, "Restore Payment", "Archive Payment"),
                 MessageBoxButtons.OK,
                 MessageBoxIcon.Warning
             )
-
             Return
-
         End If
 
-
-        Dim result As DialogResult =
-            MessageBox.Show(
-                "Are you sure you want to delete this payment?",
-                "Delete Payment",
-                MessageBoxButtons.YesNo,
-                MessageBoxIcon.Question
-            )
-
-
-        If result <> DialogResult.Yes Then
-
-            Return
-
-        End If
-
+        Dim actionVerb As String = If(viewingArchived, "restore", "archive")
+        If MessageBox.Show(
+            "Are you sure you want to " & actionVerb & " this payment?" &
+            Environment.NewLine & Environment.NewLine &
+            "The payment record will be retained and can be restored later.",
+            "Confirm " & If(viewingArchived, "Restore", "Archive"),
+            MessageBoxButtons.YesNo,
+            MessageBoxIcon.Question
+        ) <> DialogResult.Yes Then Return
 
         Try
-
-            Using connection =
-                DatabaseHelper.GetConnection()
-
+            Using connection = DatabaseHelper.GetConnection()
                 connection.Open()
 
-
-                Dim reservationID As Integer =
-                    GetPaymentReservationID(
-                        connection,
-                        selectedPaymentID
-                    )
-
-
+                Dim reservationID As Integer = GetPaymentReservationID(connection, selectedPaymentID)
                 Dim sql As String =
-                    "DELETE FROM Payments " &
+                    "UPDATE Payments SET IsArchived = @IsArchived, " &
+                    "ArchivedAt = CASE WHEN @IsArchived = 1 THEN SYSDATETIME() ELSE NULL END " &
                     "WHERE PaymentID = @PaymentID"
 
-
-                Using command As New SqlCommand(
-                    sql,
-                    connection
-                )
-
-                    command.Parameters.AddWithValue(
-                        "@PaymentID",
-                        selectedPaymentID
-                    )
-
-                    command.ExecuteNonQuery()
-                    AuditLogger.Log("Changed payment data", "A payment record was created, updated, or otherwise changed.")
-
+                Using command As New SqlCommand(sql, connection)
+                    command.Parameters.Add("@IsArchived", SqlDbType.Bit).Value = Not viewingArchived
+                    command.Parameters.Add("@PaymentID", SqlDbType.Int).Value = selectedPaymentID
+                    If command.ExecuteNonQuery() <> 1 Then
+                        Throw New InvalidOperationException("The payment record was not found or was not changed.")
+                    End If
                 End Using
 
-
                 If reservationID > 0 Then
-
-                    UpdateReservationPaymentStatus(
-                        connection,
-                        reservationID
-                    )
-
+                    UpdateReservationPaymentStatus(connection, reservationID)
                 End If
-
             End Using
 
+            AuditLogger.Log(
+                If(viewingArchived, "Restored payment", "Archived payment"),
+                If(viewingArchived, "Restored a payment record.", "Archived a payment record; the original payment was retained.")
+            )
 
             MessageBox.Show(
-                "Payment deleted successfully.",
+                If(viewingArchived, "Payment restored successfully.", "Payment archived successfully."),
                 "Aurelia Grand Hotel",
                 MessageBoxButtons.OK,
                 MessageBoxIcon.Information
             )
 
-
             LoadPayments()
-
             LoadReservationsIntoComboBox()
-
             ClearFields()
 
-
         Catch ex As Exception
-
             MessageBox.Show(
-                "Unable to delete payment." &
-                Environment.NewLine &
-                Environment.NewLine &
-                ex.Message,
+                "Unable to " & actionVerb & " payment." & Environment.NewLine & Environment.NewLine & ex.Message,
                 "Database Error",
                 MessageBoxButtons.OK,
                 MessageBoxIcon.Error
             )
-
         End Try
+
+    End Sub
+
+
+    Private Sub ToggleArchivedPayments(sender As Object, e As EventArgs)
+
+        viewingArchived = Not viewingArchived
+        btnViewArchived.Text = If(viewingArchived, "Show Active", "Show Archived")
+        btnDelete.Text = If(viewingArchived, "Restore", "Archive")
+        btnAdd.Enabled = Not viewingArchived
+        btnUpdate.Enabled = Not viewingArchived
+
+        txtSearch.Clear()
+        LoadPayments()
+        ClearFields()
 
     End Sub
 
@@ -2145,6 +2145,7 @@ Public Class PaymentsForm
             "SELECT ISNULL(SUM(PaymentAmount), 0) " &
             "FROM Payments " &
             "WHERE ReservationID = @ReservationID " &
+            "AND IsArchived = 0 " &
             "AND PaymentID <> @PaymentID"
 
 
@@ -2620,12 +2621,12 @@ Public Class PaymentsForm
                     "ON r.GuestID = g.GuestID " &
                     "INNER JOIN Rooms rm " &
                     "ON r.RoomID = rm.RoomID " &
-                    "WHERE " &
-                    "g.FullName LIKE @Search " &
+                    "WHERE p.IsArchived = " & If(viewingArchived, "1", "0") & " " &
+                    "AND (g.FullName LIKE @Search " &
                     "OR rm.RoomNumber LIKE @Search " &
                     "OR p.PaymentMethod LIKE @Search " &
                     "OR p.PaymentStatus LIKE @Search " &
-                    "OR p.ReferenceNumber LIKE @Search " &
+                    "OR p.ReferenceNumber LIKE @Search) " &
                     "ORDER BY p.PaymentID DESC"
 
 
