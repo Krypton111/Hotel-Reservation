@@ -79,6 +79,8 @@ Public Class ReservationsForm
     Private btnAdd As Button
     Private btnUpdate As Button
     Private btnDelete As Button
+    Private btnViewArchived As Button
+    Private viewingArchived As Boolean = False
     Private btnClear As Button
 
     Private dgvReservations As DataGridView
@@ -848,7 +850,7 @@ Public Class ReservationsForm
 
         btnDelete =
             CreateButton(
-                "Delete",
+                "Archive",
                 New Point(800, 305),
                 New Size(105, 38),
                 Rose
@@ -867,7 +869,16 @@ Public Class ReservationsForm
             AddressOf UpdateReservationClicked
 
         AddHandler btnDelete.Click,
-            AddressOf DeleteReservationClicked
+            AddressOf ArchiveReservationClicked
+
+        btnViewArchived = CreateButton(
+            "Show Archived",
+            New Point(890, 114),
+            New Size(150, 36),
+            Sage
+        )
+        Me.Controls.Add(btnViewArchived)
+        AddHandler btnViewArchived.Click, AddressOf ToggleArchivedReservations
 
 
         '======================================================
@@ -1272,6 +1283,7 @@ Public Class ReservationsForm
                     "ContactNumber, " &
                     "Email " &
                     "FROM Guests " &
+                    "WHERE IsArchived = 0 " &
                     "ORDER BY FullName"
 
 
@@ -1391,6 +1403,7 @@ Public Class ReservationsForm
                     "Status " &
                     "FROM Rooms " &
                     "WHERE Status <> 'Maintenance' " &
+                    "AND IsArchived = 0 " &
                     "ORDER BY RoomNumber"
 
 
@@ -1701,6 +1714,7 @@ Public Class ReservationsForm
                     "ON r.GuestID = g.GuestID " &
                     "INNER JOIN Rooms rm " &
                     "ON r.RoomID = rm.RoomID " &
+                    "WHERE r.IsArchived = " & If(viewingArchived, "1", "0") & " " &
                     "ORDER BY r.ReservationID DESC"
 
 
@@ -1895,6 +1909,11 @@ Public Class ReservationsForm
         sender As Object,
         e As EventArgs
     )
+
+        If viewingArchived Then
+            MessageBox.Show("Switch to active reservations before adding a reservation.", "Archive View", MessageBoxButtons.OK, MessageBoxIcon.Information)
+            Return
+        End If
 
         If Not ValidateReservation() Then
 
@@ -2190,7 +2209,7 @@ Dim sql As String =
     End Sub
 
 
-    Private Sub DeleteReservationClicked(
+    Private Sub ArchiveReservationClicked(
         sender As Object,
         e As EventArgs
     )
@@ -2198,108 +2217,63 @@ Dim sql As String =
         If selectedReservationID <= 0 Then
             MessageBox.Show(
                 "Please select a reservation first.",
-                "Delete Reservation",
+                If(viewingArchived, "Restore Reservation", "Archive Reservation"),
                 MessageBoxButtons.OK,
                 MessageBoxIcon.Warning
             )
             Return
         End If
 
+        Dim actionVerb As String = If(viewingArchived, "restore", "archive")
+        If MessageBox.Show(
+            "Are you sure you want to " & actionVerb & " this reservation?" &
+            Environment.NewLine & Environment.NewLine &
+            "The reservation and its payment history will be retained.",
+            "Confirm " & If(viewingArchived, "Restore", "Archive"),
+            MessageBoxButtons.YesNo,
+            MessageBoxIcon.Question
+        ) <> DialogResult.Yes Then Return
+
         Try
             Using connection = DatabaseHelper.GetConnection()
                 connection.Open()
 
                 Dim roomID As Integer
-                Dim paymentCount As Integer
-
-                Using command As New SqlCommand(
+                Using roomCommand As New SqlCommand(
                     "SELECT RoomID FROM Reservations WHERE ReservationID = @ReservationID",
                     connection
                 )
-                    command.Parameters.Add("@ReservationID", SqlDbType.Int).Value = selectedReservationID
-                    Dim value As Object = command.ExecuteScalar()
+                    roomCommand.Parameters.Add("@ReservationID", SqlDbType.Int).Value = selectedReservationID
+                    Dim value As Object = roomCommand.ExecuteScalar()
                     If value Is Nothing OrElse value Is DBNull.Value Then
-                        MessageBox.Show(
-                            "The reservation no longer exists. Refresh the list and try again.",
-                            "Reservation Not Found",
-                            MessageBoxButtons.OK,
-                            MessageBoxIcon.Warning
-                        )
-                        LoadReservations()
-                        ClearFields()
-                        Return
+                        Throw New InvalidOperationException("The reservation was not found. Refresh and try again.")
                     End If
                     roomID = Convert.ToInt32(value)
                 End Using
 
-                Using command As New SqlCommand(
-                    "SELECT COUNT(*) FROM Payments WHERE ReservationID = @ReservationID",
-                    connection
-                )
+                Dim sql As String =
+                    "UPDATE Reservations SET IsArchived = @IsArchived, " &
+                    "ArchivedAt = CASE WHEN @IsArchived = 1 THEN SYSDATETIME() ELSE NULL END " &
+                    "WHERE ReservationID = @ReservationID"
+
+                Using command As New SqlCommand(sql, connection)
+                    command.Parameters.Add("@IsArchived", SqlDbType.Bit).Value = Not viewingArchived
                     command.Parameters.Add("@ReservationID", SqlDbType.Int).Value = selectedReservationID
-                    paymentCount = Convert.ToInt32(command.ExecuteScalar())
-                End Using
-
-                Dim confirmation As String =
-                    "Are you sure you want to permanently delete this reservation?"
-
-                If paymentCount > 0 Then
-                    confirmation =
-                        "This reservation has " & paymentCount.ToString() &
-                        " linked payment record(s)." & Environment.NewLine & Environment.NewLine &
-                        "Deleting the reservation will also permanently delete those payment records." &
-                        Environment.NewLine & Environment.NewLine &
-                        "This action cannot be undone. Continue?"
-                End If
-
-                If MessageBox.Show(
-                    confirmation,
-                    "Confirm Reservation Deletion",
-                    MessageBoxButtons.YesNo,
-                    MessageBoxIcon.Warning
-                ) <> DialogResult.Yes Then
-                    Return
-                End If
-
-                Using transaction = connection.BeginTransaction()
-                    Try
-                        Using command As New SqlCommand(
-                            "DELETE FROM Payments WHERE ReservationID = @ReservationID",
-                            connection,
-                            transaction
-                        )
-                            command.Parameters.Add("@ReservationID", SqlDbType.Int).Value = selectedReservationID
-                            command.ExecuteNonQuery()
-                        End Using
-
-                        Using command As New SqlCommand(
-                            "DELETE FROM Reservations WHERE ReservationID = @ReservationID",
-                            connection,
-                            transaction
-                        )
-                            command.Parameters.Add("@ReservationID", SqlDbType.Int).Value = selectedReservationID
-                            If command.ExecuteNonQuery() <> 1 Then
-                                Throw New InvalidOperationException("The reservation was not found or could not be deleted.")
-                            End If
-                        End Using
-
-                        transaction.Commit()
-                    Catch
-                        transaction.Rollback()
-                        Throw
-                    End Try
+                    If command.ExecuteNonQuery() <> 1 Then
+                        Throw New InvalidOperationException("The reservation was not found or was not changed.")
+                    End If
                 End Using
 
                 UpdateRoomStatusAfterReservation(connection, roomID, String.Empty)
             End Using
 
             AuditLogger.Log(
-                "Deleted reservation",
-                "Deleted reservation and associated payment records where present."
+                If(viewingArchived, "Restored reservation", "Archived reservation"),
+                If(viewingArchived, "Restored a reservation record.", "Archived a reservation record without deleting related payments.")
             )
 
             MessageBox.Show(
-                "Reservation deleted successfully.",
+                If(viewingArchived, "Reservation restored successfully.", "Reservation archived successfully."),
                 "Aurelia Grand Hotel",
                 MessageBoxButtons.OK,
                 MessageBoxIcon.Information
@@ -2311,12 +2285,28 @@ Dim sql As String =
 
         Catch ex As Exception
             MessageBox.Show(
-                "Unable to delete reservation." & Environment.NewLine & Environment.NewLine & ex.Message,
+                "Unable to " & actionVerb & " reservation." &
+                Environment.NewLine & Environment.NewLine & ex.Message,
                 "Database Error",
                 MessageBoxButtons.OK,
                 MessageBoxIcon.Error
             )
         End Try
+
+    End Sub
+
+
+    Private Sub ToggleArchivedReservations(sender As Object, e As EventArgs)
+
+        viewingArchived = Not viewingArchived
+        btnViewArchived.Text = If(viewingArchived, "Show Active", "Show Archived")
+        btnDelete.Text = If(viewingArchived, "Restore", "Archive")
+        btnAdd.Enabled = Not viewingArchived
+        btnUpdate.Enabled = Not viewingArchived
+
+        txtSearch.Clear()
+        LoadReservations()
+        ClearFields()
 
     End Sub
 
@@ -2518,15 +2508,8 @@ Dim sql As String =
         Dim sql As String =
             "UPDATE Rooms SET Status = " &
             "CASE " &
-            "WHEN EXISTS (" &
-            "SELECT 1 FROM Reservations " &
-            "WHERE RoomID = @RoomID AND ReservationStatus = 'Checked-In' " &
-            ") THEN 'Occupied' " &
-            "WHEN EXISTS (" &
-            "SELECT 1 FROM Reservations " &
-            "WHERE RoomID = @RoomID AND ReservationStatus = 'Reserved' " &
-            "AND CheckOutDate >= CAST(GETDATE() AS DATE) " &
-            ") THEN 'Reserved' " &
+            "WHEN EXISTS (SELECT 1 FROM Reservations WHERE RoomID = @RoomID AND IsArchived = 0 AND ReservationStatus = 'Checked-In') THEN 'Occupied' " &
+            "WHEN EXISTS (SELECT 1 FROM Reservations WHERE RoomID = @RoomID AND IsArchived = 0 AND ReservationStatus = 'Reserved' AND CheckOutDate >= CAST(GETDATE() AS DATE)) THEN 'Reserved' " &
             "ELSE 'Available' END " &
             "WHERE RoomID = @RoomID"
 
@@ -2799,12 +2782,12 @@ Dim sql As String =
                     "ON r.GuestID = g.GuestID " &
                     "INNER JOIN Rooms rm " &
                     "ON r.RoomID = rm.RoomID " &
-                    "WHERE " &
-                    "g.FullName LIKE @Search " &
+                    "WHERE r.IsArchived = " & If(viewingArchived, "1", "0") & " " &
+                    "AND (g.FullName LIKE @Search " &
                     "OR rm.RoomNumber LIKE @Search " &
                     "OR rm.RoomType LIKE @Search " &
                     "OR r.ReservationStatus LIKE @Search " &
-                    "OR r.PaymentStatus LIKE @Search " &
+                    "OR r.PaymentStatus LIKE @Search) " &
                     "ORDER BY r.ReservationID DESC"
 
 
