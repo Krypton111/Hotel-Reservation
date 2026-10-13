@@ -90,8 +90,8 @@ CREATE OR ALTER VIEW dbo.vw_ReservationReport AS
 SELECT
     r.ReservationID, r.ReferenceNumber, g.GuestID, g.FullName AS GuestName,
     g.ContactNumber, g.Email, rm.RoomID, rm.RoomNumber, rm.RoomType,
-    r.CheckInDate, r.CheckOutDate, r.NumberOfNights, r.NumberOfGuests,
-    r.RoomRate, r.TotalAmount, r.ReservationStatus, r.PaymentStatus,
+    r.CheckInDate, r.CheckOutDate, r.NumberOfNights AS Nights, r.NumberOfGuests,
+    r.RoomRate AS RatePerNight, r.TotalAmount, r.ReservationStatus, r.PaymentStatus,
     r.BookingDate, r.SpecialRequests, r.Notes,
     u.FullName AS CreatedBy
 FROM dbo.Reservations r
@@ -103,21 +103,22 @@ GO
 
 CREATE OR ALTER VIEW dbo.vw_GuestReport AS
 SELECT
-    g.GuestID, g.FullName, g.ContactNumber, g.Email, g.City, g.Country,
+    g.GuestID, g.FullName, g.ContactNumber, g.Email, g.Address, g.City, g.Country,
     COUNT(r.ReservationID) AS ReservationCount,
     COALESCE(SUM(CASE WHEN r.ReservationStatus <> 'Cancelled' THEN r.TotalAmount ELSE 0 END), 0) AS TotalReservationValue
 FROM dbo.Guests g
 LEFT JOIN dbo.Reservations r ON g.GuestID = r.GuestID AND r.IsArchived = 0
 WHERE g.IsArchived = 0
-GROUP BY g.GuestID, g.FullName, g.ContactNumber, g.Email, g.City, g.Country;
+GROUP BY g.GuestID, g.FullName, g.ContactNumber, g.Email, g.Address, g.City, g.Country;
 GO
 
 CREATE OR ALTER VIEW dbo.vw_PaymentReport AS
 SELECT
     p.PaymentID, p.PaymentDate, p.PaymentAmount, p.PaymentMethod, p.PaymentStatus,
-    p.ReferenceNumber AS PaymentReference,
-    r.ReservationID, r.ReferenceNumber AS ReservationReference,
-    g.FullName AS GuestName, rm.RoomNumber
+    p.ReferenceNumber AS ReferenceNumber,
+    r.ReservationID, r.TotalAmount AS ReservationTotal,
+    r.ReferenceNumber AS ReservationReference,
+    g.FullName AS GuestName, rm.RoomNumber, rm.RoomType
 FROM dbo.Payments p
 INNER JOIN dbo.Reservations r ON p.ReservationID = r.ReservationID
 INNER JOIN dbo.Guests g ON r.GuestID = g.GuestID
