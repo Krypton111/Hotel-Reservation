@@ -381,7 +381,7 @@ Public Class LoginForm
 
         btnExit =
             New Button With {
-                .Text = "EXIT",
+                .Text = "EXIT APPLICATION",
                 .Location = New Point(210, 235),
                 .Size = New Size(165, 45),
                 .BackColor =
@@ -678,7 +678,17 @@ Public Class LoginForm
         e As EventArgs
     )
 
-        Application.Exit()
+        Dim result As DialogResult =
+            MessageBox.Show(
+                "Are you sure you want to exit Aurelia Grand Hotel?",
+                "Exit Application",
+                MessageBoxButtons.YesNo,
+                MessageBoxIcon.Question
+            )
+
+        If result = DialogResult.Yes Then
+            Application.Exit()
+        End If
 
     End Sub
 
