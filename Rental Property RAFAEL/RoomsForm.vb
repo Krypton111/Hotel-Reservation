@@ -1355,7 +1355,7 @@ Public Class RoomsForm
             Dim sql As String =
                 "SELECT COUNT(*) " &
                 "FROM Reservations " &
-                "WHERE RoomID = @RoomID AND IsArchived = 0 AND ReservationStatus IN ('Reserved', 'Checked-In')"
+                "WHERE RoomID = @RoomID AND IsArchived = 0"
 
             Using connection =
                 DatabaseHelper.GetConnection()
