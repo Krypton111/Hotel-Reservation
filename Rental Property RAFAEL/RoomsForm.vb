@@ -127,166 +127,83 @@ Public Class RoomsForm
 
     Private Sub BuildForm()
 
-        '-------------------------------------------------------
-        ' HEADER
-        '-------------------------------------------------------
+        ' A single root table reserves separate rows for the page header
+        ' and the work area. The work area then reserves a dedicated editor
+        ' row above the scrollable room grid.
+        Dim rootLayout As New TableLayoutPanel()
+        rootLayout.Dock = DockStyle.Fill
+        rootLayout.Margin = New Padding(0)
+        rootLayout.Padding = New Padding(0)
+        rootLayout.ColumnCount = 1
+        rootLayout.RowCount = 2
+        rootLayout.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 100.0F))
+        rootLayout.RowStyles.Add(New RowStyle(SizeType.Absolute, 105.0F))
+        rootLayout.RowStyles.Add(New RowStyle(SizeType.Percent, 100.0F))
 
         headerPanel = New Panel()
-
-        headerPanel.Dock =
-            DockStyle.Top
-
-        headerPanel.Height =
-            105
-
-        headerPanel.BackColor =
-            DeepNavy
-
-        Me.Controls.Add(
-            headerPanel
-        )
-
+        headerPanel.Dock = DockStyle.Fill
+        headerPanel.Margin = New Padding(0)
+        headerPanel.BackColor = DeepNavy
 
         titleLabel = New Label()
-
-        titleLabel.Text =
-            "ROOM MANAGEMENT"
-
-        titleLabel.ForeColor =
-            Color.White
-
-        titleLabel.Font =
-            New Font(
-                "Segoe UI Semibold",
-                22.0F
-            )
-
-        titleLabel.AutoSize =
-            True
-
-        titleLabel.Location =
-            New Point(35, 18)
-
-        headerPanel.Controls.Add(
-            titleLabel
-        )
-
+        titleLabel.Text = "ROOM MANAGEMENT"
+        titleLabel.ForeColor = Color.White
+        titleLabel.Font = New Font("Segoe UI Semibold", 22.0F)
+        titleLabel.AutoSize = True
+        titleLabel.Location = New Point(35, 18)
+        headerPanel.Controls.Add(titleLabel)
 
         subtitleLabel = New Label()
+        subtitleLabel.Text = "Aurelia Grand Hotel • manage rooms, rates and availability"
+        subtitleLabel.ForeColor = Color.FromArgb(215, 207, 190)
+        subtitleLabel.Font = New Font("Segoe UI", 10.0F)
+        subtitleLabel.AutoSize = True
+        subtitleLabel.Location = New Point(38, 62)
+        headerPanel.Controls.Add(subtitleLabel)
 
-        subtitleLabel.Text =
-            "Aurelia Grand Hotel • manage rooms, rates and availability"
-
-        subtitleLabel.ForeColor =
-            Color.FromArgb(
-                215,
-                207,
-                190
-            )
-
-        subtitleLabel.Font =
-            New Font(
-                "Segoe UI",
-                10.0F
-            )
-
-        subtitleLabel.AutoSize =
-            True
-
-        subtitleLabel.Location =
-            New Point(38, 62)
-
-        headerPanel.Controls.Add(
-            subtitleLabel
-        )
-
-
-        '-------------------------------------------------------
-        ' CONTENT
-        '-------------------------------------------------------
+        rootLayout.Controls.Add(headerPanel, 0, 0)
 
         contentPanel = New Panel()
+        contentPanel.Dock = DockStyle.Fill
+        contentPanel.Margin = New Padding(0)
+        contentPanel.Padding = New Padding(18, 10, 18, 12)
+        contentPanel.BackColor = Ivory
 
-        contentPanel.Dock =
-            DockStyle.Fill
-
-        contentPanel.BackColor =
-            Ivory
-
-        contentPanel.Padding =
-            New Padding(25)
-
-        Me.Controls.Add(
-            contentPanel
-        )
-
-
-        '-------------------------------------------------------
-        ' ROOM EDITOR IS CREATED AFTER THE GRID BELOW
-        '-------------------------------------------------------
-
-        '-------------------------------------------------------
-        ' GRID PANEL
-        ' Add the fill-docked grid FIRST. WinForms docking follows
-        ' control z-order; adding it after the top panel can cause
-        ' the grid to occupy/cover the room editor area.
-        '-------------------------------------------------------
-
-        gridPanel = New Panel()
-
-        gridPanel.Dock =
-            DockStyle.Fill
-
-        gridPanel.BackColor =
-            Ivory
-
-        gridPanel.Padding =
-            New Padding(
-                0,
-                15,
-                0,
-                0
-            )
-
-        contentPanel.Controls.Add(
-            gridPanel
-        )
-
-        BuildGrid()
-
-
-        '-------------------------------------------------------
-        ' ROOM EDITOR
-        ' Add the top-docked editor LAST so it reserves its own
-        ' area above the grid instead of being overlapped.
-        '-------------------------------------------------------
+        Dim workLayout As New TableLayoutPanel()
+        workLayout.Dock = DockStyle.Fill
+        workLayout.Margin = New Padding(0)
+        workLayout.Padding = New Padding(0)
+        workLayout.ColumnCount = 1
+        workLayout.RowCount = 2
+        workLayout.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 100.0F))
+        workLayout.RowStyles.Add(New RowStyle(SizeType.Absolute, 300.0F))
+        workLayout.RowStyles.Add(New RowStyle(SizeType.Percent, 100.0F))
 
         formPanel = New Panel()
+        formPanel.Dock = DockStyle.Fill
+        formPanel.Margin = New Padding(0)
+        formPanel.Padding = New Padding(5)
+        formPanel.BackColor = WarmWhite
+        formPanel.BorderStyle = BorderStyle.FixedSingle
+        formPanel.MinimumSize = New Size(0, 285)
 
-        formPanel.Dock =
-            DockStyle.Top
+        gridPanel = New Panel()
+        gridPanel.Dock = DockStyle.Fill
+        gridPanel.Margin = New Padding(0)
+        gridPanel.Padding = New Padding(0, 10, 0, 0)
+        gridPanel.BackColor = Ivory
 
-        formPanel.Height =
-            285
+        workLayout.Controls.Add(formPanel, 0, 0)
+        workLayout.Controls.Add(gridPanel, 0, 1)
+        contentPanel.Controls.Add(workLayout)
+        rootLayout.Controls.Add(contentPanel, 0, 1)
 
-        formPanel.BackColor =
-            WarmWhite
-
-        formPanel.BorderStyle =
-            BorderStyle.FixedSingle
-
-        formPanel.AutoScroll = False
-        formPanel.Padding = New Padding(4)
-
-        contentPanel.Controls.Add(
-            formPanel
-        )
-
-        contentPanel.Controls.SetChildIndex(formPanel, 0)
-        formPanel.BringToFront()
-        formPanel.Visible = True
+        Me.Controls.Clear()
+        Me.Controls.Add(rootLayout)
+        rootLayout.BringToFront()
 
         BuildRoomFields()
+        BuildGrid()
 
     End Sub
 
@@ -297,171 +214,136 @@ Public Class RoomsForm
 
     Private Sub BuildRoomFields()
 
-        ' Use a table-based layout instead of fixed pixel coordinates.
-        ' Every input gets its own cell, so later controls cannot cover it.
+        ' Four dedicated rows: room details, pricing/status, description,
+        ' then search and actions. The layout sizes to the editor panel,
+        ' rather than placing controls at fixed x/y positions.
         Dim editorLayout As New TableLayoutPanel()
-
         editorLayout.Dock = DockStyle.Fill
         editorLayout.Margin = New Padding(0)
-        editorLayout.Padding = New Padding(8)
+        editorLayout.Padding = New Padding(4)
         editorLayout.ColumnCount = 4
         editorLayout.RowCount = 4
         editorLayout.GrowStyle = TableLayoutPanelGrowStyle.FixedSize
 
-        For i As Integer = 0 To 3
-            editorLayout.ColumnStyles.Add(
-                New ColumnStyle(SizeType.Percent, 25.0F)
-            )
+        For columnIndex As Integer = 0 To 3
+            editorLayout.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 25.0F))
         Next
 
-        editorLayout.RowStyles.Add(New RowStyle(SizeType.Absolute, 64.0F))
-        editorLayout.RowStyles.Add(New RowStyle(SizeType.Absolute, 64.0F))
+        editorLayout.RowStyles.Add(New RowStyle(SizeType.Absolute, 60.0F))
+        editorLayout.RowStyles.Add(New RowStyle(SizeType.Absolute, 60.0F))
+        editorLayout.RowStyles.Add(New RowStyle(SizeType.Absolute, 92.0F))
         editorLayout.RowStyles.Add(New RowStyle(SizeType.Percent, 100.0F))
-        editorLayout.RowStyles.Add(New RowStyle(SizeType.Absolute, 56.0F))
 
-        ' Room ID
         roomIDLabel = CreateLabel("Room ID", Point.Empty)
         txtRoomID = New TextBox()
         txtRoomID.ReadOnly = True
         txtRoomID.BackColor = Color.FromArgb(238, 235, 228)
-        txtRoomID.Dock = DockStyle.Fill
         editorLayout.Controls.Add(CreateRoomFieldCell(roomIDLabel, txtRoomID), 0, 0)
 
-        ' Room number
         roomNumberLabel = CreateLabel("Room Number *", Point.Empty)
         txtRoomNumber = New TextBox()
         txtRoomNumber.MaxLength = 20
-        txtRoomNumber.Dock = DockStyle.Fill
         txtRoomNumber.TabIndex = 0
         editorLayout.Controls.Add(CreateRoomFieldCell(roomNumberLabel, txtRoomNumber), 1, 0)
 
-        ' Room type
         roomTypeLabel = CreateLabel("Room Type *", Point.Empty)
         cboRoomType = New ComboBox()
         cboRoomType.DropDownStyle = ComboBoxStyle.DropDownList
-        cboRoomType.Dock = DockStyle.Fill
         cboRoomType.Items.AddRange(New Object() {
-            "Standard Room",
-            "Deluxe Room",
-            "Superior Room",
-            "Executive Room",
-            "Junior Suite",
-            "Presidential Suite"
+            "Standard Room", "Deluxe Room", "Superior Room",
+            "Executive Room", "Junior Suite", "Presidential Suite"
         })
         editorLayout.Controls.Add(CreateRoomFieldCell(roomTypeLabel, cboRoomType), 2, 0)
 
-        ' Capacity
         capacityLabel = CreateLabel("Capacity *", Point.Empty)
         nudCapacity = New NumericUpDown()
         nudCapacity.Minimum = 1
         nudCapacity.Maximum = 20
         nudCapacity.Value = 2
-        nudCapacity.Dock = DockStyle.Fill
         editorLayout.Controls.Add(CreateRoomFieldCell(capacityLabel, nudCapacity), 3, 0)
 
-        ' Rate per night
         rateLabel = CreateLabel("Rate Per Night *", Point.Empty)
         txtRate = New TextBox()
-        txtRate.Dock = DockStyle.Fill
         editorLayout.Controls.Add(CreateRoomFieldCell(rateLabel, txtRate), 0, 1)
 
-        ' Floor number
         floorLabel = CreateLabel("Floor *", Point.Empty)
         nudFloor = New NumericUpDown()
         nudFloor.Minimum = 1
         nudFloor.Maximum = 100
         nudFloor.Value = 1
-        nudFloor.Dock = DockStyle.Fill
         editorLayout.Controls.Add(CreateRoomFieldCell(floorLabel, nudFloor), 1, 1)
 
-        ' Room status
         statusFieldLabel = CreateLabel("Room Status *", Point.Empty)
         cboStatus = New ComboBox()
         cboStatus.DropDownStyle = ComboBoxStyle.DropDownList
-        cboStatus.Dock = DockStyle.Fill
-        cboStatus.Items.AddRange(New Object() {
-            "Available",
-            "Reserved",
-            "Occupied",
-            "Maintenance"
-        })
+        cboStatus.Items.AddRange(New Object() {"Available", "Reserved", "Occupied", "Maintenance"})
         editorLayout.Controls.Add(CreateRoomFieldCell(statusFieldLabel, cboStatus), 2, 1)
 
-        ' Description spans the full editor width.
-        Dim descriptionCell As New TableLayoutPanel()
+        Dim descriptionCell As New Panel()
         descriptionCell.Dock = DockStyle.Fill
         descriptionCell.Margin = New Padding(4)
-        descriptionCell.Padding = New Padding(3, 0, 3, 2)
-        descriptionCell.ColumnCount = 1
-        descriptionCell.RowCount = 2
-        descriptionCell.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 100.0F))
-        descriptionCell.RowStyles.Add(New RowStyle(SizeType.Absolute, 24.0F))
-        descriptionCell.RowStyles.Add(New RowStyle(SizeType.Percent, 100.0F))
-
         descriptionLabel = CreateLabel("Description", Point.Empty)
-        descriptionLabel.Dock = DockStyle.Fill
+        descriptionLabel.Location = New Point(2, 0)
+        descriptionLabel.Size = New Size(150, 21)
+        descriptionLabel.Anchor = AnchorStyles.Top Or AnchorStyles.Left Or AnchorStyles.Right
 
         txtDescription = New TextBox()
-        txtDescription.Dock = DockStyle.Fill
+        txtDescription.Location = New Point(2, 23)
+        txtDescription.Size = New Size(100, 60)
+        txtDescription.Anchor = AnchorStyles.Top Or AnchorStyles.Bottom Or AnchorStyles.Left Or AnchorStyles.Right
         txtDescription.Multiline = True
         txtDescription.ScrollBars = ScrollBars.Vertical
         txtDescription.MaxLength = 500
 
-        descriptionCell.Controls.Add(descriptionLabel, 0, 0)
-        descriptionCell.Controls.Add(txtDescription, 0, 1)
+        descriptionCell.Controls.Add(txtDescription)
+        descriptionCell.Controls.Add(descriptionLabel)
         editorLayout.Controls.Add(descriptionCell, 0, 2)
         editorLayout.SetColumnSpan(descriptionCell, 4)
 
-        ' Search cell
-        Dim searchCell As New TableLayoutPanel()
+        Dim searchCell As New Panel()
         searchCell.Dock = DockStyle.Fill
         searchCell.Margin = New Padding(4)
-        searchCell.Padding = New Padding(3, 0, 3, 2)
-        searchCell.ColumnCount = 1
-        searchCell.RowCount = 2
-        searchCell.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 100.0F))
-        searchCell.RowStyles.Add(New RowStyle(SizeType.Absolute, 24.0F))
-        searchCell.RowStyles.Add(New RowStyle(SizeType.Percent, 100.0F))
-
         searchLabel = CreateLabel("Search Rooms", Point.Empty)
-        searchLabel.Dock = DockStyle.Fill
+        searchLabel.Location = New Point(2, 0)
+        searchLabel.Size = New Size(180, 21)
 
         txtSearch = New TextBox()
-        txtSearch.Dock = DockStyle.Fill
+        txtSearch.Location = New Point(2, 24)
+        txtSearch.Size = New Size(100, 28)
+        txtSearch.Anchor = AnchorStyles.Top Or AnchorStyles.Left Or AnchorStyles.Right
         txtSearch.PlaceholderText = "Room number, type or status..."
 
-        searchCell.Controls.Add(searchLabel, 0, 0)
-        searchCell.Controls.Add(txtSearch, 0, 1)
+        searchCell.Controls.Add(txtSearch)
+        searchCell.Controls.Add(searchLabel)
         editorLayout.Controls.Add(searchCell, 0, 3)
 
-        ' Actions occupy the remaining three columns and wrap on smaller windows.
         Dim actionsPanel As New FlowLayoutPanel()
         actionsPanel.Dock = DockStyle.Fill
         actionsPanel.Margin = New Padding(2)
-        actionsPanel.Padding = New Padding(0, 7, 0, 0)
+        actionsPanel.Padding = New Padding(0, 8, 0, 0)
         actionsPanel.FlowDirection = FlowDirection.LeftToRight
         actionsPanel.WrapContents = True
         actionsPanel.AutoScroll = True
 
-        btnAdd = CreateButton("Add Room", Point.Empty, New Size(110, 38), Color.FromArgb(72, 91, 79))
+        btnAdd = CreateButton("Add Room", Point.Empty, New Size(104, 36), Color.FromArgb(72, 91, 79))
         AddHandler btnAdd.Click, AddressOf AddButton_Click
 
-        btnUpdate = CreateButton("Update", Point.Empty, New Size(100, 38), Navy)
+        btnUpdate = CreateButton("Update", Point.Empty, New Size(90, 36), Navy)
         AddHandler btnUpdate.Click, AddressOf UpdateButton_Click
 
-        btnDelete = CreateButton("Delete", Point.Empty, New Size(100, 38), Color.FromArgb(116, 70, 65))
+        btnDelete = CreateButton("Delete", Point.Empty, New Size(90, 36), Color.FromArgb(116, 70, 65))
         AddHandler btnDelete.Click, AddressOf DeleteButton_Click
 
-        btnClear = CreateButton("Clear", Point.Empty, New Size(90, 38), Color.FromArgb(108, 105, 98))
+        btnClear = CreateButton("Clear", Point.Empty, New Size(78, 36), Color.FromArgb(108, 105, 98))
         AddHandler btnClear.Click, AddressOf ClearButton_Click
 
-        btnSearch = CreateButton("Search", Point.Empty, New Size(95, 38), Color.FromArgb(91, 75, 52))
+        btnSearch = CreateButton("Search", Point.Empty, New Size(82, 36), Color.FromArgb(91, 75, 52))
         AddHandler btnSearch.Click, AddressOf SearchButton_Click
 
-        btnRefresh = CreateButton("Refresh", Point.Empty, New Size(95, 38), Color.FromArgb(69, 82, 91))
+        btnRefresh = CreateButton("Refresh", Point.Empty, New Size(86, 36), Color.FromArgb(69, 82, 91))
         AddHandler btnRefresh.Click, AddressOf RefreshButton_Click
 
-        btnClose = CreateButton("Close", Point.Empty, New Size(90, 38), Color.FromArgb(108, 105, 98))
+        btnClose = CreateButton("Close", Point.Empty, New Size(78, 36), Color.FromArgb(108, 105, 98))
         AddHandler btnClose.Click, AddressOf CloseButton_Click
 
         actionsPanel.Controls.AddRange(New Control() {
@@ -481,25 +363,24 @@ Public Class RoomsForm
     Private Function CreateRoomFieldCell(
         fieldLabel As Label,
         inputControl As Control
-    ) As TableLayoutPanel
+    ) As Panel
 
-        Dim cell As New TableLayoutPanel()
+        Dim cell As New Panel()
         cell.Dock = DockStyle.Fill
         cell.Margin = New Padding(4)
-        cell.Padding = New Padding(3, 0, 3, 2)
-        cell.ColumnCount = 1
-        cell.RowCount = 2
-        cell.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 100.0F))
-        cell.RowStyles.Add(New RowStyle(SizeType.Absolute, 24.0F))
-        cell.RowStyles.Add(New RowStyle(SizeType.Percent, 100.0F))
 
-        fieldLabel.Dock = DockStyle.Fill
-        fieldLabel.Margin = New Padding(0)
-        inputControl.Dock = DockStyle.Fill
-        inputControl.Margin = New Padding(0, 1, 0, 0)
+        fieldLabel.Location = New Point(2, 0)
+        fieldLabel.Size = New Size(150, 21)
+        fieldLabel.Anchor = AnchorStyles.Top Or AnchorStyles.Left Or AnchorStyles.Right
+        fieldLabel.AutoSize = False
 
-        cell.Controls.Add(fieldLabel, 0, 0)
-        cell.Controls.Add(inputControl, 0, 1)
+        inputControl.Location = New Point(2, 24)
+        inputControl.Size = New Size(100, 28)
+        inputControl.Anchor = AnchorStyles.Top Or AnchorStyles.Left Or AnchorStyles.Right
+        inputControl.Margin = New Padding(0)
+
+        cell.Controls.Add(inputControl)
+        cell.Controls.Add(fieldLabel)
 
         Return cell
 
@@ -667,6 +548,12 @@ Public Class RoomsForm
 
         dgvRooms.Dock =
             DockStyle.Fill
+
+        dgvRooms.ScrollBars = ScrollBars.Both
+        dgvRooms.AutoSizeRowsMode = DataGridViewAutoSizeRowsMode.None
+        dgvRooms.AllowUserToResizeRows = False
+        dgvRooms.RowTemplate.Height = 34
+        dgvRooms.StandardTab = True
 
         dgvRooms.BackgroundColor =
             WarmWhite
