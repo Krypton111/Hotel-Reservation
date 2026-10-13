@@ -1,1719 +1,382 @@
-﻿Imports System.Data
+Imports System.Data
 Imports System.Drawing
+Imports System.Security.Cryptography
+Imports System.Text
 Imports System.Windows.Forms
 Imports Microsoft.Data.SqlClient
 
 Public Class UserManagementForm
     Inherits Form
 
-    '==========================================================
-    ' COLORS - CASA BREW COFFEE CAFE
-    '==========================================================
+    Private ReadOnly DeepNavy As Color = Color.FromArgb(20, 27, 38)
+    Private ReadOnly Navy As Color = Color.FromArgb(31, 42, 56)
+    Private ReadOnly Champagne As Color = Color.FromArgb(198, 166, 110)
+    Private ReadOnly Ivory As Color = Color.FromArgb(247, 244, 237)
+    Private ReadOnly WarmWhite As Color = Color.FromArgb(253, 251, 247)
+    Private ReadOnly Charcoal As Color = Color.FromArgb(45, 45, 43)
+    Private ReadOnly MutedGray As Color = Color.FromArgb(125, 125, 120)
 
-    Private ReadOnly CoffeeDark As Color =
-        Color.FromArgb(62, 39, 35)
-
-    Private ReadOnly Coffee As Color =
-        Color.FromArgb(111, 78, 55)
-
-    Private ReadOnly Caramel As Color =
-        Color.FromArgb(166, 123, 91)
-
-    Private ReadOnly Latte As Color =
-        Color.FromArgb(200, 162, 122)
-
-    Private ReadOnly Cream As Color =
-        Color.FromArgb(245, 237, 227)
-
-    Private ReadOnly CardColor As Color =
-        Color.FromArgb(255, 249, 243)
-
-    Private ReadOnly TextDark As Color =
-        Color.FromArgb(59, 48, 42)
-
-    Private ReadOnly Sage As Color =
-        Color.FromArgb(122, 139, 114)
-
-
-    '==========================================================
-    ' CONTROLS
-    '==========================================================
-
-    Private lblTitle As Label
-    Private lblSubtitle As Label
-
-    Private pnlEditor As Panel
-    Private pnlTable As Panel
-
-    Private lblUserID As Label
     Private txtUserID As TextBox
-
-    Private lblUsername As Label
     Private txtUsername As TextBox
-
-    Private lblFullName As Label
     Private txtFullName As TextBox
-
-    Private lblPassword As Label
     Private txtPassword As TextBox
-
-    Private lblRole As Label
     Private cmbRole As ComboBox
-
-    Private lblStatus As Label
-    Private cmbStatus As ComboBox
-
-    Private lblSearch As Label
-    Private txtSearch As TextBox
-
-    Private btnAdd As Button
-    Private btnUpdate As Button
-    Private btnDelete As Button
-    Private btnResetPassword As Button
-    Private btnClear As Button
-    Private btnRefresh As Button
-
+    Private chkActive As CheckBox
+    Private txtUserSearch As TextBox
     Private dgvUsers As DataGridView
-
-    Private lblRecordCount As Label
-
-
-    '==========================================================
-    ' CONSTRUCTOR
-    '==========================================================
+    Private dgvActivity As DataGridView
+    Private cmbActivityUser As ComboBox
+    Private cmbPeriod As ComboBox
+    Private dtFrom As DateTimePicker
+    Private dtTo As DateTimePicker
+    Private lblActivityCount As Label
 
     Public Sub New()
+        If Not LoginForm.LoggedInRole.Equals("Admin", StringComparison.OrdinalIgnoreCase) Then
+            Throw New UnauthorizedAccessException("User Management is available to Admin accounts only.")
+        End If
 
         BuildForm()
-
+        AuditLogger.Log("Opened User Management", "Viewed user accounts and activity log.")
         LoadUsers()
-
-        ClearFields()
-
+        LoadActivityUsers()
+        ApplyPeriod()
+        LoadActivity()
     End Sub
-
-
-    '==========================================================
-    ' BUILD FORM
-    '==========================================================
 
     Private Sub BuildForm()
-
-        Me.Text = "User Management - Casa Brew"
-
-        Me.StartPosition =
-            FormStartPosition.CenterScreen
-
-        Me.Size =
-            New Size(1000, 650)
-
-        Me.MinimumSize =
-            New Size(900, 600)
-
-        Me.BackColor =
-            Cream
-
-        Me.Font =
-            New Font("Segoe UI", 9.5F)
-
-
-        '======================================================
-        ' TITLE
-        '======================================================
-
-        lblTitle = New Label()
-
-        lblTitle.Text =
-            "User Management"
-
-        lblTitle.Location =
-            New Point(25, 20)
-
-        lblTitle.Size =
-            New Size(500, 40)
-
-        lblTitle.Font =
-            New Font(
-                "Georgia",
-                20,
-                FontStyle.Bold
-            )
-
-        lblTitle.ForeColor =
-            TextDark
-
-        Me.Controls.Add(lblTitle)
-
-
-        '======================================================
-        ' SUBTITLE
-        '======================================================
-
-        lblSubtitle = New Label()
-
-        lblSubtitle.Text =
-            "Manage system accounts, roles, passwords, and access."
-
-        lblSubtitle.Location =
-            New Point(27, 58)
-
-        lblSubtitle.Size =
-            New Size(650, 30)
-
-        lblSubtitle.Font =
-            New Font(
-                "Segoe UI",
-                9.5F
-            )
-
-        lblSubtitle.ForeColor =
-            Coffee
-
-        Me.Controls.Add(lblSubtitle)
-
-
-        '======================================================
-        ' EDITOR PANEL
-        '======================================================
-
-        pnlEditor = New Panel()
-
-        pnlEditor.Location =
-            New Point(25, 95)
-
-        pnlEditor.Size =
-            New Size(330, 450)
-
-        pnlEditor.BackColor =
-            CardColor
-
-        Me.Controls.Add(pnlEditor)
-
-
-        '======================================================
-        ' USER ID
-        '======================================================
-
-        lblUserID =
-            CreateLabel(
-                "User ID",
-                New Point(20, 18)
-            )
-
-        pnlEditor.Controls.Add(lblUserID)
-
-
-        txtUserID =
-            CreateTextBox(
-                New Point(20, 42),
-                New Size(285, 30)
-            )
-
-        txtUserID.ReadOnly = True
-
-        txtUserID.BackColor =
-            Color.FromArgb(
-                235,
-                228,
-                221
-            )
-
-        pnlEditor.Controls.Add(txtUserID)
-
-
-        '======================================================
-        ' USERNAME
-        '======================================================
-
-        lblUsername =
-            CreateLabel(
-                "Username",
-                New Point(20, 82)
-            )
-
-        pnlEditor.Controls.Add(lblUsername)
-
-
-        txtUsername =
-            CreateTextBox(
-                New Point(20, 106),
-                New Size(285, 30)
-            )
-
-        pnlEditor.Controls.Add(txtUsername)
-
-
-        '======================================================
-        ' FULL NAME
-        '======================================================
-
-        lblFullName =
-            CreateLabel(
-                "Full Name",
-                New Point(20, 146)
-            )
-
-        pnlEditor.Controls.Add(lblFullName)
-
-
-        txtFullName =
-            CreateTextBox(
-                New Point(20, 170),
-                New Size(285, 30)
-            )
-
-        pnlEditor.Controls.Add(txtFullName)
-
-
-        '======================================================
-        ' PASSWORD
-        '======================================================
-
-        lblPassword =
-            CreateLabel(
-                "Password",
-                New Point(20, 210)
-            )
-
-        pnlEditor.Controls.Add(lblPassword)
-
-
-        txtPassword =
-            CreateTextBox(
-                New Point(20, 234),
-                New Size(285, 30)
-            )
-
-        txtPassword.UseSystemPasswordChar =
-            True
-
-        pnlEditor.Controls.Add(txtPassword)
-
-
-        '======================================================
-        ' ROLE
-        '======================================================
-
-        lblRole =
-            CreateLabel(
-                "Role",
-                New Point(20, 274)
-            )
-
-        pnlEditor.Controls.Add(lblRole)
-
-
-        cmbRole = New ComboBox()
-
-        cmbRole.Location =
-            New Point(20, 298)
-
-        cmbRole.Size =
-            New Size(285, 30)
-
-        cmbRole.DropDownStyle =
-            ComboBoxStyle.DropDownList
-
-        cmbRole.Items.Add("Admin")
-        cmbRole.Items.Add("Property Manager")
-        cmbRole.Items.Add("Receptionist")
-        cmbRole.Items.Add("Staff")
-
+        Text = "User Management - Aurelia Grand Hotel"
+        BackColor = Ivory
+        Font = New Font("Segoe UI", 9.5F)
+        MinimumSize = New Size(950, 650)
+        Size = New Size(1150, 780)
+        FormBorderStyle = FormBorderStyle.None
+        TopLevel = False
+        Dock = DockStyle.Fill
+
+        Dim root As New TableLayoutPanel With {
+            .Dock = DockStyle.Fill, .ColumnCount = 1, .RowCount = 3,
+            .BackColor = Ivory, .Padding = New Padding(22)
+        }
+        root.RowStyles.Add(New RowStyle(SizeType.Absolute, 65))
+        root.RowStyles.Add(New RowStyle(SizeType.Percent, 48))
+        root.RowStyles.Add(New RowStyle(SizeType.Percent, 52))
+        Controls.Add(root)
+
+        Dim header As New Panel With {.Dock = DockStyle.Fill, .BackColor = Ivory}
+        Dim title As New Label With {
+            .Text = "User Management", .Font = New Font("Georgia", 21, FontStyle.Bold),
+            .ForeColor = Charcoal, .Location = New Point(0, 0), .Size = New Size(500, 34)
+        }
+        Dim subtitle As New Label With {
+            .Text = "Manage accounts and review staff activity by date.",
+            .ForeColor = MutedGray, .Location = New Point(2, 36), .AutoSize = True
+        }
+        header.Controls.Add(title)
+        header.Controls.Add(subtitle)
+        root.Controls.Add(header, 0, 0)
+
+        Dim upper As New SplitContainer With {
+            .Dock = DockStyle.Fill, .Orientation = Orientation.Vertical,
+            .SplitterDistance = 320, .BackColor = Ivory, .Panel1MinSize = 290, .Panel2MinSize = 400
+        }
+        root.Controls.Add(upper, 0, 1)
+
+        Dim editor As New Panel With {.Dock = DockStyle.Fill, .BackColor = WarmWhite, .Padding = New Padding(16)}
+        upper.Panel1.Controls.Add(editor)
+        AddLabel(editor, "ACCOUNT DETAILS", 16, 12, 270, 25, True)
+        AddLabel(editor, "User ID", 16, 48, 270, 20, False)
+        txtUserID = AddTextBox(editor, 16, 70, 270, 28, True)
+        AddLabel(editor, "Username", 16, 108, 270, 20, False)
+        txtUsername = AddTextBox(editor, 16, 130, 270, 28)
+        AddLabel(editor, "Full name", 16, 168, 270, 20, False)
+        txtFullName = AddTextBox(editor, 16, 190, 270, 28)
+        AddLabel(editor, "New password (leave blank to keep current)", 16, 228, 280, 20, False)
+        txtPassword = AddTextBox(editor, 16, 250, 270, 28)
+        txtPassword.UseSystemPasswordChar = True
+        AddLabel(editor, "Role", 16, 288, 270, 20, False)
+        cmbRole = New ComboBox With {.Location = New Point(16, 310), .Size = New Size(270, 29), .DropDownStyle = ComboBoxStyle.DropDownList}
+        cmbRole.Items.AddRange(New Object() {"Admin", "Manager", "Receptionist", "Staff"})
         cmbRole.SelectedIndex = 3
-
-        pnlEditor.Controls.Add(cmbRole)
-
-
-        '======================================================
-        ' STATUS
-        '======================================================
-
-        lblStatus =
-            CreateLabel(
-                "Account Status",
-                New Point(20, 338)
-            )
-
-        pnlEditor.Controls.Add(lblStatus)
-
-
-        cmbStatus = New ComboBox()
-
-        cmbStatus.Location =
-            New Point(20, 362)
-
-        cmbStatus.Size =
-            New Size(285, 30)
-
-        cmbStatus.DropDownStyle =
-            ComboBoxStyle.DropDownList
-
-        cmbStatus.Items.Add("Active")
-        cmbStatus.Items.Add("Inactive")
-
-        cmbStatus.SelectedIndex = 0
-
-        pnlEditor.Controls.Add(cmbStatus)
-
-
-        '======================================================
-        ' TABLE PANEL
-        '======================================================
-
-        pnlTable = New Panel()
-
-        pnlTable.Location =
-            New Point(375, 95)
-
-        pnlTable.Size =
-            New Size(580, 450)
-
-        pnlTable.BackColor =
-            CardColor
-
-        Me.Controls.Add(pnlTable)
-
-
-        '======================================================
-        ' SEARCH
-        '======================================================
-
-        lblSearch =
-            CreateLabel(
-                "Search Users",
-                New Point(20, 18)
-            )
-
-        pnlTable.Controls.Add(lblSearch)
-
-
-        txtSearch =
-            CreateTextBox(
-                New Point(20, 42),
-                New Size(270, 30)
-            )
-
-        txtSearch.PlaceholderText =
-            "Username, name, or role..."
-
-        pnlTable.Controls.Add(txtSearch)
-
-
-        '======================================================
-        ' REFRESH
-        '======================================================
-
-        btnRefresh =
-            CreateActionButton(
-                "Refresh",
-                New Point(305, 40),
-                New Size(105, 32),
-                Coffee
-            )
-
-        pnlTable.Controls.Add(btnRefresh)
-
-
-        '======================================================
-        ' RECORD COUNT
-        '======================================================
-
-        lblRecordCount = New Label()
-
-        lblRecordCount.Location =
-            New Point(425, 47)
-
-        lblRecordCount.Size =
-            New Size(130, 20)
-
-        lblRecordCount.TextAlign =
-            ContentAlignment.MiddleRight
-
-        lblRecordCount.ForeColor =
-            Coffee
-
-        pnlTable.Controls.Add(lblRecordCount)
-
-
-        '======================================================
-        ' DATA GRID
-        '======================================================
-
-        dgvUsers = New DataGridView()
-
-        dgvUsers.Location =
-            New Point(20, 85)
-
-        dgvUsers.Size =
-            New Size(535, 345)
-
-        dgvUsers.BackgroundColor =
-            Color.White
-
-        dgvUsers.BorderStyle =
-            BorderStyle.None
-
-        dgvUsers.AllowUserToAddRows =
-            False
-
-        dgvUsers.AllowUserToDeleteRows =
-            False
-
-        dgvUsers.ReadOnly =
-            True
-
-        dgvUsers.MultiSelect =
-            False
-
-        dgvUsers.SelectionMode =
-            DataGridViewSelectionMode.FullRowSelect
-
-        dgvUsers.AutoSizeColumnsMode =
-            DataGridViewAutoSizeColumnsMode.Fill
-
-        dgvUsers.RowHeadersVisible =
-            False
-
-        dgvUsers.EnableHeadersVisualStyles =
-            False
-
-        dgvUsers.ColumnHeadersDefaultCellStyle.BackColor =
-            Coffee
-
-        dgvUsers.ColumnHeadersDefaultCellStyle.ForeColor =
-            Color.White
-
-        dgvUsers.ColumnHeadersDefaultCellStyle.Font =
-            New Font(
-                "Segoe UI",
-                9,
-                FontStyle.Bold
-            )
-
-        dgvUsers.ColumnHeadersHeight =
-            38
-
-        dgvUsers.DefaultCellStyle.BackColor =
-            Color.White
-
-        dgvUsers.DefaultCellStyle.ForeColor =
-            TextDark
-
-        dgvUsers.DefaultCellStyle.SelectionBackColor =
-            Color.FromArgb(
-                225,
-                210,
-                198
-            )
-
-        dgvUsers.DefaultCellStyle.SelectionForeColor =
-            TextDark
-
-        dgvUsers.AlternatingRowsDefaultCellStyle.BackColor =
-            Color.FromArgb(
-                249,
-                244,
-                239
-            )
-
-        dgvUsers.RowTemplate.Height =
-            32
-
-        pnlTable.Controls.Add(dgvUsers)
-
-
-        '======================================================
-        ' BOTTOM BUTTONS
-        '======================================================
-
-        btnAdd =
-            CreateActionButton(
-                "Add User",
-                New Point(25, 560),
-                New Size(120, 40),
-                Sage
-            )
-
-        Me.Controls.Add(btnAdd)
-
-
-        btnUpdate =
-            CreateActionButton(
-                "Update",
-                New Point(155, 560),
-                New Size(120, 40),
-                Coffee
-            )
-
-        Me.Controls.Add(btnUpdate)
-
-
-        btnDelete =
-            CreateActionButton(
-                "Deactivate",
-                New Point(285, 560),
-                New Size(120, 40),
-                Color.FromArgb(
-                    145,
-                    91,
-                    70
-                )
-            )
-
-        Me.Controls.Add(btnDelete)
-
-
-        btnResetPassword =
-            CreateActionButton(
-                "Reset Password",
-                New Point(415, 560),
-                New Size(140, 40),
-                Caramel
-            )
-
-        Me.Controls.Add(btnResetPassword)
-
-
-        btnClear =
-            CreateActionButton(
-                "Clear",
-                New Point(565, 560),
-                New Size(100, 40),
-                Latte
-            )
-
-        Me.Controls.Add(btnClear)
-
-
-        '======================================================
-        ' EVENT HANDLERS
-        '
-        ' IMPORTANT:
-        ' All controls are created BEFORE AddHandler is used.
-        '======================================================
-
-        AddHandler btnAdd.Click,
-            AddressOf AddUser
-
-        AddHandler btnUpdate.Click,
-            AddressOf UpdateUser
-
-        AddHandler btnDelete.Click,
-            AddressOf DeleteUser
-
-        AddHandler btnResetPassword.Click,
-            AddressOf ResetPassword
-
-        AddHandler btnClear.Click,
-            AddressOf ClearFieldsButton
-
-        AddHandler btnRefresh.Click,
-            AddressOf RefreshUsers
-
-        AddHandler txtSearch.TextChanged,
-            AddressOf SearchUsers
-
-        AddHandler dgvUsers.CellClick,
-            AddressOf UserRowSelected
-
+        editor.Controls.Add(cmbRole)
+        chkActive = New CheckBox With {.Text = "Account is active", .Location = New Point(16, 348), .AutoSize = True, .Checked = True, .ForeColor = Charcoal}
+        editor.Controls.Add(chkActive)
+
+        Dim btnSave As Button = AddButton(editor, "Save Changes", 16, 386, 130, 38, Navy)
+        Dim btnNew As Button = AddButton(editor, "New Account", 156, 386, 130, 38, Color.FromArgb(122, 139, 114))
+        Dim btnReset As Button = AddButton(editor, "Clear", 16, 432, 130, 34, Color.FromArgb(125, 125, 120))
+        AddHandler btnSave.Click, AddressOf SaveUser
+        AddHandler btnNew.Click, Sub() ClearEditor()
+        AddHandler btnReset.Click, Sub() ClearEditor()
+
+        Dim accounts As New Panel With {.Dock = DockStyle.Fill, .BackColor = WarmWhite, .Padding = New Padding(14)}
+        upper.Panel2.Controls.Add(accounts)
+        AddLabel(accounts, "ALL SYSTEM ACCOUNTS", 14, 10, 280, 24, True)
+        txtUserSearch = New TextBox With {.Location = New Point(14, 39), .Size = New Size(260, 28), .PlaceholderText = "Search username, name, or role"}
+        accounts.Controls.Add(txtUserSearch)
+        Dim btnRefresh As Button = AddButton(accounts, "Refresh", 282, 37, 90, 31, Navy)
+        AddHandler btnRefresh.Click, Sub() LoadUsers()
+        dgvUsers = MakeGrid()
+        dgvUsers.Location = New Point(14, 78)
+        dgvUsers.Anchor = AnchorStyles.Top Or AnchorStyles.Bottom Or AnchorStyles.Left Or AnchorStyles.Right
+        dgvUsers.Size = New Size(500, 300)
+        accounts.Controls.Add(dgvUsers)
+        AddHandler dgvUsers.CellClick, AddressOf UserSelected
+        AddHandler txtUserSearch.TextChanged, AddressOf FilterUsers
+
+        Dim activityPanel As New Panel With {.Dock = DockStyle.Fill, .BackColor = WarmWhite, .Padding = New Padding(14)}
+        root.Controls.Add(activityPanel, 0, 2)
+        AddLabel(activityPanel, "USER ACTIVITY HISTORY", 14, 8, 300, 25, True)
+        cmbPeriod = New ComboBox With {.Location = New Point(14, 38), .Size = New Size(145, 28), .DropDownStyle = ComboBoxStyle.DropDownList}
+        cmbPeriod.Items.AddRange(New Object() {"Today", "Yesterday", "Last 7 days", "Last 30 days", "This month", "Custom range"})
+        cmbPeriod.SelectedIndex = 0
+        activityPanel.Controls.Add(cmbPeriod)
+        dtFrom = New DateTimePicker With {.Location = New Point(168, 38), .Size = New Size(135, 28), .Format = DateTimePickerFormat.Short, .Value = Date.Today}
+        dtTo = New DateTimePicker With {.Location = New Point(311, 38), .Size = New Size(135, 28), .Format = DateTimePickerFormat.Short, .Value = Date.Today}
+        activityPanel.Controls.Add(dtFrom)
+        activityPanel.Controls.Add(dtTo)
+        cmbActivityUser = New ComboBox With {.Location = New Point(455, 38), .Size = New Size(190, 28), .DropDownStyle = ComboBoxStyle.DropDownList, .Anchor = AnchorStyles.Top Or AnchorStyles.Left}
+        activityPanel.Controls.Add(cmbActivityUser)
+        Dim btnFilter As Button = AddButton(activityPanel, "Apply", 653, 36, 80, 31, Navy)
+        btnFilter.Anchor = AnchorStyles.Top Or AnchorStyles.Right
+        Dim btnToday As Button = AddButton(activityPanel, "Today", 741, 36, 78, 31, Color.FromArgb(122, 139, 114))
+        btnToday.Anchor = AnchorStyles.Top Or AnchorStyles.Right
+        lblActivityCount = New Label With {.Text = "0 activities", .Location = New Point(825, 41), .Size = New Size(150, 22), .Anchor = AnchorStyles.Top Or AnchorStyles.Right, .ForeColor = MutedGray, .TextAlign = ContentAlignment.MiddleRight}
+        activityPanel.Controls.Add(lblActivityCount)
+        dgvActivity = MakeGrid()
+        dgvActivity.Location = New Point(14, 76)
+        dgvActivity.Size = New Size(900, 180)
+        dgvActivity.Anchor = AnchorStyles.Top Or AnchorStyles.Bottom Or AnchorStyles.Left Or AnchorStyles.Right
+        activityPanel.Controls.Add(dgvActivity)
+        AddHandler cmbPeriod.SelectedIndexChanged, Sub() ApplyPeriod()
+        AddHandler btnFilter.Click, Sub() LoadActivity()
+        AddHandler btnToday.Click, Sub()
+                                       cmbPeriod.SelectedItem = "Today"
+                                       ApplyPeriod()
+                                       LoadActivity()
+                                   End Sub
+        AddHandler dtFrom.ValueChanged, Sub()
+                                            If cmbPeriod.SelectedItem IsNot Nothing AndAlso cmbPeriod.SelectedItem.ToString() <> "Custom range" Then cmbPeriod.SelectedItem = "Custom range"
+                                        End Sub
+        AddHandler dtTo.ValueChanged, Sub()
+                                          If cmbPeriod.SelectedItem IsNot Nothing AndAlso cmbPeriod.SelectedItem.ToString() <> "Custom range" Then cmbPeriod.SelectedItem = "Custom range"
+                                      End Sub
+
+        AddHandler Me.SizeChanged, Sub()
+                                       If dgvUsers IsNot Nothing Then dgvUsers.Size = New Size(Math.Max(250, accounts.ClientSize.Width - 28), Math.Max(150, accounts.ClientSize.Height - 92))
+                                       If dgvActivity IsNot Nothing Then dgvActivity.Size = New Size(Math.Max(400, activityPanel.ClientSize.Width - 28), Math.Max(100, activityPanel.ClientSize.Height - 90))
+                                       If lblActivityCount IsNot Nothing Then lblActivityCount.Left = activityPanel.ClientSize.Width - lblActivityCount.Width - 14
+                                   End Sub
     End Sub
 
+    Private Sub AddLabel(parent As Control, text As String, x As Integer, y As Integer, width As Integer, height As Integer, bold As Boolean)
+        parent.Controls.Add(New Label With {.Text = text, .Location = New Point(x, y), .Size = New Size(width, height), .ForeColor = If(bold, Navy, Charcoal), .Font = New Font("Segoe UI", If(bold, 10.0F, 9.0F), If(bold, FontStyle.Bold, FontStyle.Regular))})
+    End Sub
 
-    '==========================================================
-    ' CREATE LABEL
-    '==========================================================
-
-    Private Function CreateLabel(
-        text As String,
-        location As Point
-    ) As Label
-
-        Dim label As New Label()
-
-        label.Text =
-            text
-
-        label.Location =
-            location
-
-        label.Size =
-            New Size(285, 22)
-
-        label.Font =
-            New Font(
-                "Segoe UI",
-                9,
-                FontStyle.Bold
-            )
-
-        label.ForeColor =
-            TextDark
-
-        Return label
-
+    Private Function AddTextBox(parent As Control, x As Integer, y As Integer, width As Integer, height As Integer, Optional readOnlyValue As Boolean = False) As TextBox
+        Dim box As New TextBox With {.Location = New Point(x, y), .Size = New Size(width, height), .ReadOnly = readOnlyValue, .BorderStyle = BorderStyle.FixedSingle}
+        parent.Controls.Add(box)
+        Return box
     End Function
 
-
-    '==========================================================
-    ' CREATE TEXTBOX
-    '==========================================================
-
-    Private Function CreateTextBox(
-        location As Point,
-        textBoxSize As Size
-    ) As TextBox
-
-        Dim textBox As New TextBox()
-
-        textBox.Location =
-            location
-
-        textBox.Size =
-            textBoxSize
-
-        textBox.BorderStyle =
-            BorderStyle.FixedSingle
-
-        textBox.Font =
-            New Font(
-                "Segoe UI",
-                9.5F
-            )
-
-        Return textBox
-
-    End Function
-
-
-    '==========================================================
-    ' CREATE BUTTON
-    '==========================================================
-
-    Private Function CreateActionButton(
-        text As String,
-        location As Point,
-        buttonSize As Size,
-        buttonColor As Color
-    ) As Button
-
-        Dim button As New Button()
-
-        button.Text =
-            text
-
-        button.Location =
-            location
-
-        button.Size =
-            buttonSize
-
-        button.BackColor =
-            buttonColor
-
-        button.ForeColor =
-            Color.White
-
-        button.FlatStyle =
-            FlatStyle.Flat
-
-        button.FlatAppearance.BorderSize =
-            0
-
-        button.Font =
-            New Font(
-                "Segoe UI",
-                9,
-                FontStyle.Bold
-            )
-
-        button.Cursor =
-            Cursors.Hand
-
-        button.UseVisualStyleBackColor =
-            False
-
+    Private Function AddButton(parent As Control, text As String, x As Integer, y As Integer, width As Integer, height As Integer, color As Color) As Button
+        Dim button As New Button With {.Text = text, .Location = New Point(x, y), .Size = New Size(width, height), .BackColor = color, .ForeColor = Color.White, .FlatStyle = FlatStyle.Flat, .Cursor = Cursors.Hand, .UseVisualStyleBackColor = False}
+        button.FlatAppearance.BorderSize = 0
+        parent.Controls.Add(button)
         Return button
-
     End Function
 
-
-    '==========================================================
-    ' LOAD USERS
-    '==========================================================
+    Private Function MakeGrid() As DataGridView
+        Return New DataGridView With {
+            .BackgroundColor = Color.White, .BorderStyle = BorderStyle.None,
+            .AllowUserToAddRows = False, .AllowUserToDeleteRows = False, .ReadOnly = True,
+            .MultiSelect = False, .SelectionMode = DataGridViewSelectionMode.FullRowSelect,
+            .AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill,
+            .RowHeadersVisible = False, .EnableHeadersVisualStyles = False,
+            .ColumnHeadersDefaultCellStyle = New DataGridViewCellStyle With {.BackColor = Navy, .ForeColor = Color.White, .Font = New Font("Segoe UI", 9, FontStyle.Bold)},
+            .DefaultCellStyle = New DataGridViewCellStyle With {.SelectionBackColor = Color.FromArgb(218, 192, 143), .SelectionForeColor = Charcoal},
+            .AlternatingRowsDefaultCellStyle = New DataGridViewCellStyle With {.BackColor = Color.FromArgb(249, 247, 242)}
+        }
+    End Function
 
     Private Sub LoadUsers()
-
         Try
-
-            Using connection =
-                DatabaseHelper.GetConnection()
-
+            Using connection = DatabaseHelper.GetConnection()
                 connection.Open()
-
-                Dim sql As String =
-                    "SELECT " &
-                    "UserID, " &
-                    "Username, " &
-                    "FullName, " &
-                    "Role, " &
-                    "IsActive " &
-                    "FROM Users " &
-                    "ORDER BY UserID"
-
-                Using command As New SqlCommand(
-                    sql,
-                    connection
-                )
-
-                    Using adapter As New SqlDataAdapter(
-                        command
-                    )
-
-                        Dim table As New DataTable()
-
-                        adapter.Fill(table)
-
-                        dgvUsers.DataSource =
-                            table
-
-                    End Using
-
+                Using adapter As New SqlDataAdapter("SELECT UserID, Username, FullName, RoleName, IsActive FROM Users ORDER BY UserID", connection)
+                    Dim table As New DataTable()
+                    adapter.Fill(table)
+                    dgvUsers.DataSource = table
                 End Using
-
             End Using
-
-            FormatUserGrid()
-
-            UpdateRecordCount()
-
+            If dgvUsers.Columns.Contains("UserID") Then dgvUsers.Columns("UserID").HeaderText = "ID"
+            If dgvUsers.Columns.Contains("FullName") Then dgvUsers.Columns("FullName").HeaderText = "Full name"
+            If dgvUsers.Columns.Contains("RoleName") Then dgvUsers.Columns("RoleName").HeaderText = "Role"
+            If dgvUsers.Columns.Contains("IsActive") Then dgvUsers.Columns("IsActive").HeaderText = "Active"
+            FilterUsers(Nothing, EventArgs.Empty)
         Catch ex As Exception
-
-            MessageBox.Show(
-                "Unable to load users." &
-                Environment.NewLine &
-                Environment.NewLine &
-                ex.Message,
-                "User Management",
-                MessageBoxButtons.OK,
-                MessageBoxIcon.Error
-            )
-
+            ShowError("Unable to load accounts. Confirm the Users table contains UserID, Username, FullName, RoleName, PasswordHash, and IsActive.", ex)
         End Try
-
     End Sub
 
-
-    '==========================================================
-    ' FORMAT GRID
-    '==========================================================
-
-    Private Sub FormatUserGrid()
-
-        If dgvUsers.Columns.Count = 0 Then
-            Return
-        End If
-
-
-        If dgvUsers.Columns.Contains(
-            "UserID"
-        ) Then
-
-            dgvUsers.Columns(
-                "UserID"
-            ).HeaderText =
-                "ID"
-
-        End If
-
-
-        If dgvUsers.Columns.Contains(
-            "Username"
-        ) Then
-
-            dgvUsers.Columns(
-                "Username"
-            ).HeaderText =
-                "Username"
-
-        End If
-
-
-        If dgvUsers.Columns.Contains(
-            "FullName"
-        ) Then
-
-            dgvUsers.Columns(
-                "FullName"
-            ).HeaderText =
-                "Full Name"
-
-        End If
-
-
-        If dgvUsers.Columns.Contains(
-            "Role"
-        ) Then
-
-            dgvUsers.Columns(
-                "Role"
-            ).HeaderText =
-                "Role"
-
-        End If
-
-
-        If dgvUsers.Columns.Contains(
-            "IsActive"
-        ) Then
-
-            dgvUsers.Columns(
-                "IsActive"
-            ).HeaderText =
-                "Active"
-
-        End If
-
+    Private Sub FilterUsers(sender As Object, e As EventArgs)
+        Dim table = TryCast(dgvUsers.DataSource, DataTable)
+        If table Is Nothing Then Return
+        Dim value = txtUserSearch.Text.Trim().Replace("'", "''").Replace("[", "[[]").Replace("%", "[%]").Replace("*", "[*]")
+        table.DefaultView.RowFilter = If(value = "", "", "Username LIKE '%" & value & "%' OR FullName LIKE '%" & value & "%' OR RoleName LIKE '%" & value & "%'")
     End Sub
 
-
-    '==========================================================
-    ' SELECT USER
-    '==========================================================
-
-    Private Sub UserRowSelected(
-        sender As Object,
-        e As DataGridViewCellEventArgs
-    )
-
-        If e.RowIndex < 0 Then
-            Return
-        End If
-
-        Dim row As DataGridViewRow =
-            dgvUsers.Rows(e.RowIndex)
-
-
-        If row.Cells("UserID").Value IsNot Nothing Then
-
-            txtUserID.Text =
-                row.Cells("UserID").Value.ToString()
-
-        End If
-
-
-        If row.Cells("Username").Value IsNot Nothing Then
-
-            txtUsername.Text =
-                row.Cells("Username").Value.ToString()
-
-        End If
-
-
-        If row.Cells("FullName").Value IsNot Nothing Then
-
-            txtFullName.Text =
-                row.Cells("FullName").Value.ToString()
-
-        End If
-
-
-        If row.Cells("Role").Value IsNot Nothing Then
-
-            cmbRole.Text =
-                row.Cells("Role").Value.ToString()
-
-        End If
-
-
-        If row.Cells("IsActive").Value IsNot Nothing Then
-
-            Dim active As Boolean =
-                Convert.ToBoolean(
-                    row.Cells("IsActive").Value
-                )
-
-            If active Then
-
-                cmbStatus.SelectedItem =
-                    "Active"
-
-            Else
-
-                cmbStatus.SelectedItem =
-                    "Inactive"
-
-            End If
-
-        End If
-
-
-        'Password is intentionally not loaded.
+    Private Sub UserSelected(sender As Object, e As DataGridViewCellEventArgs)
+        If e.RowIndex < 0 Then Return
+        Dim row = dgvUsers.Rows(e.RowIndex)
+        txtUserID.Text = Convert.ToString(row.Cells("UserID").Value)
+        txtUsername.Text = Convert.ToString(row.Cells("Username").Value)
+        txtFullName.Text = Convert.ToString(row.Cells("FullName").Value)
+        cmbRole.SelectedItem = Convert.ToString(row.Cells("RoleName").Value)
+        chkActive.Checked = Convert.ToBoolean(row.Cells("IsActive").Value)
         txtPassword.Clear()
-
     End Sub
 
-
-    '==========================================================
-    ' ADD USER
-    '==========================================================
-
-    Private Sub AddUser(
-        sender As Object,
-        e As EventArgs
-    )
-
-        If Not ValidateFields(True) Then
+    Private Sub SaveUser(sender As Object, e As EventArgs)
+        If String.IsNullOrWhiteSpace(txtUserID.Text) Then
+            MessageBox.Show("Select an existing account to edit, or click New Account to create one.", "User Management", MessageBoxButtons.OK, MessageBoxIcon.Information)
             Return
         End If
-
-
+        If String.IsNullOrWhiteSpace(txtUsername.Text) OrElse String.IsNullOrWhiteSpace(txtFullName.Text) OrElse cmbRole.SelectedIndex < 0 Then
+            MessageBox.Show("Username, full name, and role are required.", "Validation", MessageBoxButtons.OK, MessageBoxIcon.Warning)
+            Return
+        End If
+        Dim id = Convert.ToInt32(txtUserID.Text)
+        If id = LoginForm.LoggedInUserID AndAlso Not chkActive.Checked Then
+            MessageBox.Show("You cannot deactivate the account currently in use.", "User Management", MessageBoxButtons.OK, MessageBoxIcon.Warning)
+            Return
+        End If
         Try
-
-            Using connection =
-                DatabaseHelper.GetConnection()
-
+            Using connection = DatabaseHelper.GetConnection()
                 connection.Open()
-
-
-                Dim sql As String =
-                    "INSERT INTO Users " &
-                    "(Username, FullName, Password, Role, IsActive) " &
-                    "VALUES " &
-                    "(@Username, @FullName, @Password, @Role, @IsActive)"
-
-
-                Using command As New SqlCommand(
-                    sql,
-                    connection
-                )
-
-                    command.Parameters.AddWithValue(
-                        "@Username",
-                        txtUsername.Text.Trim()
-                    )
-
-                    command.Parameters.AddWithValue(
-                        "@FullName",
-                        txtFullName.Text.Trim()
-                    )
-
-                    command.Parameters.AddWithValue(
-                        "@Password",
-                        txtPassword.Text
-                    )
-
-                    command.Parameters.AddWithValue(
-                        "@Role",
-                        cmbRole.Text
-                    )
-
-                    command.Parameters.AddWithValue(
-                        "@IsActive",
-                        cmbStatus.SelectedItem.ToString() =
-                        "Active"
-                    )
-
+                Dim sql = "UPDATE Users SET Username=@Username, FullName=@FullName, RoleName=@RoleName, IsActive=@IsActive"
+                If Not String.IsNullOrWhiteSpace(txtPassword.Text) Then sql &= ", PasswordHash=@PasswordHash"
+                sql &= " WHERE UserID=@UserID"
+                Using command As New SqlCommand(sql, connection)
+                    command.Parameters.Add("@Username", SqlDbType.NVarChar, 50).Value = txtUsername.Text.Trim()
+                    command.Parameters.Add("@FullName", SqlDbType.NVarChar, 150).Value = txtFullName.Text.Trim()
+                    command.Parameters.Add("@RoleName", SqlDbType.NVarChar, 50).Value = cmbRole.Text
+                    command.Parameters.Add("@IsActive", SqlDbType.Bit).Value = chkActive.Checked
+                    command.Parameters.Add("@UserID", SqlDbType.Int).Value = id
+                    If Not String.IsNullOrWhiteSpace(txtPassword.Text) Then command.Parameters.Add("@PasswordHash", SqlDbType.NVarChar, 64).Value = HashPassword(txtPassword.Text)
                     command.ExecuteNonQuery()
-
                 End Using
-
             End Using
-
-
-            MessageBox.Show(
-                "User account created successfully.",
-                "Casa Brew",
-                MessageBoxButtons.OK,
-                MessageBoxIcon.Information
-            )
-
-
+            AuditLogger.Log("Updated user account", "UserID=" & id.ToString() & "; username=" & txtUsername.Text.Trim() & "; role=" & cmbRole.Text & "; active=" & chkActive.Checked.ToString())
+            If Not String.IsNullOrWhiteSpace(txtPassword.Text) Then AuditLogger.Log("Reset user password", "Password changed for UserID=" & id.ToString() & ". Password value was not recorded.")
+            MessageBox.Show("Account updated successfully.", "User Management", MessageBoxButtons.OK, MessageBoxIcon.Information)
             LoadUsers()
-
-            ClearFields()
-
-
-        Catch ex As SqlException
-
-            If ex.Number = 2627 OrElse
-               ex.Number = 2601 Then
-
-                MessageBox.Show(
-                    "That username already exists." &
-                    Environment.NewLine &
-                    "Please choose another username.",
-                    "Duplicate Username",
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Warning
-                )
-
-            Else
-
-                ShowDatabaseError(ex)
-
-            End If
-
-
+            ClearEditor()
         Catch ex As Exception
-
-            ShowDatabaseError(ex)
-
+            ShowError("Unable to update this account. The username may already be in use.", ex)
         End Try
-
     End Sub
 
-
-    '==========================================================
-    ' UPDATE USER
-    '==========================================================
-
-    Private Sub UpdateUser(
-        sender As Object,
-        e As EventArgs
-    )
-
-        If String.IsNullOrWhiteSpace(
-            txtUserID.Text
-        ) Then
-
-            MessageBox.Show(
-                "Select a user first.",
-                "Update User",
-                MessageBoxButtons.OK,
-                MessageBoxIcon.Warning
-            )
-
-            Return
-
-        End If
-
-
-        If Not ValidateFields(False) Then
-            Return
-        End If
-
-
+    Private Sub LoadActivityUsers()
         Try
-
-            Using connection =
-                DatabaseHelper.GetConnection()
-
+            Using connection = DatabaseHelper.GetConnection()
                 connection.Open()
-
-
-                Dim sql As String =
-                    "UPDATE Users SET " &
-                    "Username = @Username, " &
-                    "FullName = @FullName, " &
-                    "Role = @Role, " &
-                    "IsActive = @IsActive " &
-                    "WHERE UserID = @UserID"
-
-
-                Using command As New SqlCommand(
-                    sql,
-                    connection
-                )
-
-                    command.Parameters.AddWithValue(
-                        "@Username",
-                        txtUsername.Text.Trim()
-                    )
-
-                    command.Parameters.AddWithValue(
-                        "@FullName",
-                        txtFullName.Text.Trim()
-                    )
-
-                    command.Parameters.AddWithValue(
-                        "@Role",
-                        cmbRole.Text
-                    )
-
-                    command.Parameters.AddWithValue(
-                        "@IsActive",
-                        cmbStatus.SelectedItem.ToString() =
-                        "Active"
-                    )
-
-                    command.Parameters.AddWithValue(
-                        "@UserID",
-                        Convert.ToInt32(
-                            txtUserID.Text
-                        )
-                    )
-
-                    command.ExecuteNonQuery()
-
+                Using adapter As New SqlDataAdapter("SELECT UserID, Username, FullName FROM Users ORDER BY Username", connection)
+                    Dim table As New DataTable()
+                    adapter.Fill(table)
+                    Dim allRow = table.NewRow()
+                    allRow("UserID") = 0
+                    allRow("Username") = "(All users)"
+                    allRow("FullName") = ""
+                    table.Rows.InsertAt(allRow, 0)
+                    cmbActivityUser.DataSource = table
+                    cmbActivityUser.DisplayMember = "Username"
+                    cmbActivityUser.ValueMember = "UserID"
                 End Using
-
             End Using
-
-
-            MessageBox.Show(
-                "User information updated successfully.",
-                "Casa Brew",
-                MessageBoxButtons.OK,
-                MessageBoxIcon.Information
-            )
-
-
-            LoadUsers()
-
-            ClearFields()
-
-
-        Catch ex As SqlException
-
-            If ex.Number = 2627 OrElse
-               ex.Number = 2601 Then
-
-                MessageBox.Show(
-                    "That username is already being used.",
-                    "Duplicate Username",
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Warning
-                )
-
-            Else
-
-                ShowDatabaseError(ex)
-
-            End If
-
-
         Catch ex As Exception
-
-            ShowDatabaseError(ex)
-
+            ' User list error is surfaced when account loading runs.
         End Try
-
     End Sub
 
+    Private Sub ApplyPeriod()
+        If cmbPeriod.SelectedItem Is Nothing OrElse dtFrom Is Nothing OrElse dtTo Is Nothing Then Return
+        Dim today = Date.Today
+        Select Case cmbPeriod.SelectedItem.ToString()
+            Case "Today"
+                dtFrom.Value = today : dtTo.Value = today
+            Case "Yesterday"
+                dtFrom.Value = today.AddDays(-1) : dtTo.Value = today.AddDays(-1)
+            Case "Last 7 days"
+                dtFrom.Value = today.AddDays(-6) : dtTo.Value = today
+            Case "Last 30 days"
+                dtFrom.Value = today.AddDays(-29) : dtTo.Value = today
+            Case "This month"
+                dtFrom.Value = New Date(today.Year, today.Month, 1) : dtTo.Value = today
+        End Select
+    End Sub
 
-    '==========================================================
-    ' DEACTIVATE USER
-    '==========================================================
-
-    Private Sub DeleteUser(
-        sender As Object,
-        e As EventArgs
-    )
-
-        If String.IsNullOrWhiteSpace(
-            txtUserID.Text
-        ) Then
-
-            MessageBox.Show(
-                "Select a user first.",
-                "Deactivate User",
-                MessageBoxButtons.OK,
-                MessageBoxIcon.Warning
-            )
-
-            Return
-
-        End If
-
-
-        Dim selectedID As Integer =
-            Convert.ToInt32(
-                txtUserID.Text
-            )
-
-
-        '======================================================
-        ' PREVENT DEACTIVATING CURRENT ACCOUNT
-        '======================================================
-
-        If selectedID =
-           LoginForm.LoggedInUserID Then
-
-            MessageBox.Show(
-                "You cannot deactivate the account currently being used.",
-                "User Management",
-                MessageBoxButtons.OK,
-                MessageBoxIcon.Warning
-            )
-
-            Return
-
-        End If
-
-
-        Dim answer As DialogResult =
-            MessageBox.Show(
-                "Deactivate this user account?" &
-                Environment.NewLine &
-                Environment.NewLine &
-                txtUsername.Text,
-                "Confirm Deactivation",
-                MessageBoxButtons.YesNo,
-                MessageBoxIcon.Question
-            )
-
-
-        If answer = DialogResult.No Then
-            Return
-        End If
-
-
+    Private Sub LoadActivity()
         Try
-
-            Using connection =
-                DatabaseHelper.GetConnection()
-
+            Using connection = DatabaseHelper.GetConnection()
                 connection.Open()
-
-
                 Dim sql As String =
-                    "UPDATE Users " &
-                    "SET IsActive = 0 " &
-                    "WHERE UserID = @UserID"
-
-
-                Using command As New SqlCommand(
-                    sql,
-                    connection
-                )
-
-                    command.Parameters.AddWithValue(
-                        "@UserID",
-                        selectedID
-                    )
-
-                    command.ExecuteNonQuery()
-
+                    "IF OBJECT_ID(N'dbo.UserActivityLog', N'U') IS NULL " &
+                    "BEGIN " &
+                    "CREATE TABLE dbo.UserActivityLog (ActivityID INT IDENTITY(1,1) PRIMARY KEY, UserID INT NULL, Username NVARCHAR(100) NOT NULL, FullName NVARCHAR(150) NULL, RoleName NVARCHAR(50) NULL, ActionName NVARCHAR(100) NOT NULL, Details NVARCHAR(1000) NULL, ActivityDate DATETIME2(0) NOT NULL CONSTRAINT DF_UserActivityLog_Date DEFAULT SYSDATETIME()); " &
+                    "CREATE INDEX IX_UserActivityLog_Date ON dbo.UserActivityLog(ActivityDate); END"
+                Using ensure As New SqlCommand(sql, connection)
+                    ensure.ExecuteNonQuery()
                 End Using
-
+                Dim query = "SELECT ActivityDate, Username, FullName, RoleName, ActionName, Details FROM dbo.UserActivityLog WHERE ActivityDate >= @FromDate AND ActivityDate < @ToDate"
+                If cmbActivityUser.SelectedValue IsNot Nothing AndAlso IsNumeric(cmbActivityUser.SelectedValue) AndAlso Convert.ToInt32(cmbActivityUser.SelectedValue) > 0 Then query &= " AND UserID=@UserID"
+                query &= " ORDER BY ActivityDate DESC"
+                Using command As New SqlCommand(query, connection)
+                    command.Parameters.Add("@FromDate", SqlDbType.DateTime2).Value = dtFrom.Value.Date
+                    command.Parameters.Add("@ToDate", SqlDbType.DateTime2).Value = dtTo.Value.Date.AddDays(1)
+                    If cmbActivityUser.SelectedValue IsNot Nothing AndAlso IsNumeric(cmbActivityUser.SelectedValue) AndAlso Convert.ToInt32(cmbActivityUser.SelectedValue) > 0 Then command.Parameters.Add("@UserID", SqlDbType.Int).Value = Convert.ToInt32(cmbActivityUser.SelectedValue)
+                    Using adapter As New SqlDataAdapter(command)
+                        Dim table As New DataTable()
+                        adapter.Fill(table)
+                        dgvActivity.DataSource = table
+                    End Using
+                End Using
             End Using
-
-
-            MessageBox.Show(
-                "User account has been deactivated.",
-                "Casa Brew",
-                MessageBoxButtons.OK,
-                MessageBoxIcon.Information
-            )
-
-
-            LoadUsers()
-
-            ClearFields()
-
-
+            If dgvActivity.Columns.Contains("ActivityDate") Then dgvActivity.Columns("ActivityDate").HeaderText = "Date and time"
+            If dgvActivity.Columns.Contains("Username") Then dgvActivity.Columns("Username").HeaderText = "Username"
+            If dgvActivity.Columns.Contains("FullName") Then dgvActivity.Columns("FullName").HeaderText = "Full name"
+            If dgvActivity.Columns.Contains("RoleName") Then dgvActivity.Columns("RoleName").HeaderText = "Role"
+            If dgvActivity.Columns.Contains("ActionName") Then dgvActivity.Columns("ActionName").HeaderText = "Action"
+            If dgvActivity.Columns.Contains("Details") Then dgvActivity.Columns("Details").HeaderText = "Details"
+            lblActivityCount.Text = dgvActivity.Rows.Count.ToString() & " activities"
+            AuditLogger.Log("Viewed activity history", "Date range " & dtFrom.Value.ToString("yyyy-MM-dd") & " to " & dtTo.Value.ToString("yyyy-MM-dd"))
         Catch ex As Exception
-
-            ShowDatabaseError(ex)
-
+            ShowError("Unable to load the activity history.", ex)
         End Try
-
     End Sub
 
-
-    '==========================================================
-    ' RESET PASSWORD
-    '==========================================================
-
-    Private Sub ResetPassword(
-        sender As Object,
-        e As EventArgs
-    )
-
-        If String.IsNullOrWhiteSpace(
-            txtUserID.Text
-        ) Then
-
-            MessageBox.Show(
-                "Select a user first.",
-                "Reset Password",
-                MessageBoxButtons.OK,
-                MessageBoxIcon.Warning
-            )
-
-            Return
-
-        End If
-
-
-        If String.IsNullOrWhiteSpace(
-            txtPassword.Text
-        ) Then
-
-            MessageBox.Show(
-                "Enter the new password in the Password field.",
-                "Reset Password",
-                MessageBoxButtons.OK,
-                MessageBoxIcon.Warning
-            )
-
-            txtPassword.Focus()
-
-            Return
-
-        End If
-
-
-        Dim answer As DialogResult =
-            MessageBox.Show(
-                "Reset the password for " &
-                txtUsername.Text &
-                "?",
-                "Confirm Password Reset",
-                MessageBoxButtons.YesNo,
-                MessageBoxIcon.Question
-            )
-
-
-        If answer = DialogResult.No Then
-            Return
-        End If
-
-
-        Try
-
-            Using connection =
-                DatabaseHelper.GetConnection()
-
-                connection.Open()
-
-
-                Dim sql As String =
-                    "UPDATE Users " &
-                    "SET Password = @Password " &
-                    "WHERE UserID = @UserID"
-
-
-                Using command As New SqlCommand(
-                    sql,
-                    connection
-                )
-
-                    command.Parameters.AddWithValue(
-                        "@Password",
-                        txtPassword.Text
-                    )
-
-                    command.Parameters.AddWithValue(
-                        "@UserID",
-                        Convert.ToInt32(
-                            txtUserID.Text
-                        )
-                    )
-
-                    command.ExecuteNonQuery()
-
-                End Using
-
-            End Using
-
-
-            MessageBox.Show(
-                "Password has been reset successfully.",
-                "Casa Brew",
-                MessageBoxButtons.OK,
-                MessageBoxIcon.Information
-            )
-
-
-            txtPassword.Clear()
-
-
-        Catch ex As Exception
-
-            ShowDatabaseError(ex)
-
-        End Try
-
+    Private Sub ClearEditor()
+        txtUserID.Clear()
+        txtUsername.Clear()
+        txtFullName.Clear()
+        txtPassword.Clear()
+        cmbRole.SelectedItem = "Staff"
+        chkActive.Checked = True
+        dgvUsers.ClearSelection()
     End Sub
 
-
-    '==========================================================
-    ' VALIDATE FIELDS
-    '==========================================================
-
-    Private Function ValidateFields(
-        includePassword As Boolean
-    ) As Boolean
-
-
-        If String.IsNullOrWhiteSpace(
-            txtUsername.Text
-        ) Then
-
-            MessageBox.Show(
-                "Please enter a username.",
-                "Validation",
-                MessageBoxButtons.OK,
-                MessageBoxIcon.Warning
-            )
-
-            txtUsername.Focus()
-
-            Return False
-
-        End If
-
-
-        If String.IsNullOrWhiteSpace(
-            txtFullName.Text
-        ) Then
-
-            MessageBox.Show(
-                "Please enter the user's full name.",
-                "Validation",
-                MessageBoxButtons.OK,
-                MessageBoxIcon.Warning
-            )
-
-            txtFullName.Focus()
-
-            Return False
-
-        End If
-
-
-        If includePassword AndAlso
-           String.IsNullOrWhiteSpace(
-               txtPassword.Text
-           ) Then
-
-            MessageBox.Show(
-                "Please enter a password.",
-                "Validation",
-                MessageBoxButtons.OK,
-                MessageBoxIcon.Warning
-            )
-
-            txtPassword.Focus()
-
-            Return False
-
-        End If
-
-
-        If cmbRole.SelectedIndex < 0 Then
-
-            MessageBox.Show(
-                "Please select a role.",
-                "Validation",
-                MessageBoxButtons.OK,
-                MessageBoxIcon.Warning
-            )
-
-            cmbRole.Focus()
-
-            Return False
-
-        End If
-
-
-        If cmbStatus.SelectedIndex < 0 Then
-
-            MessageBox.Show(
-                "Please select an account status.",
-                "Validation",
-                MessageBoxButtons.OK,
-                MessageBoxIcon.Warning
-            )
-
-            cmbStatus.Focus()
-
-            Return False
-
-        End If
-
-
-        Return True
-
+    Private Function HashPassword(value As String) As String
+        Using sha = SHA256.Create()
+            Dim bytes = sha.ComputeHash(Encoding.UTF8.GetBytes(value))
+            Dim builder As New StringBuilder()
+            For Each item In bytes
+                builder.Append(item.ToString("x2"))
+            Next
+            Return builder.ToString()
+        End Using
     End Function
 
-
-    '==========================================================
-    ' SEARCH USERS
-    '==========================================================
-
-    Private Sub SearchUsers(
-        sender As Object,
-        e As EventArgs
-    )
-
-        If dgvUsers.DataSource Is Nothing Then
-            Return
-        End If
-
-
-        Dim table As DataTable =
-            TryCast(
-                dgvUsers.DataSource,
-                DataTable
-            )
-
-
-        If table Is Nothing Then
-            Return
-        End If
-
-
-        Dim searchText As String =
-            txtSearch.Text.Trim()
-
-
-        ' Escape characters that have special meaning
-        ' in DataView.RowFilter.
-        searchText =
-            searchText.Replace(
-                "'",
-                "''"
-            )
-
-        searchText =
-            searchText.Replace(
-                "[",
-                "[[]"
-            )
-
-        searchText =
-            searchText.Replace(
-                "%",
-                "[%]"
-            )
-
-        searchText =
-            searchText.Replace(
-                "*",
-                "[*]"
-            )
-
-
-        If searchText = "" Then
-
-            table.DefaultView.RowFilter = ""
-
-        Else
-
-            table.DefaultView.RowFilter =
-                "Convert(UserID, 'System.String') LIKE '%" &
-                searchText &
-                "%' OR " &
-                "Username LIKE '%" &
-                searchText &
-                "%' OR " &
-                "FullName LIKE '%" &
-                searchText &
-                "%' OR " &
-                "Role LIKE '%" &
-                searchText &
-                "%'"
-
-        End If
-
-
-        UpdateRecordCount()
-
+    Private Sub ShowError(message As String, ex As Exception)
+        MessageBox.Show(message & Environment.NewLine & Environment.NewLine & ex.Message, "User Management", MessageBoxButtons.OK, MessageBoxIcon.Error)
     End Sub
-
-
-    '==========================================================
-    ' UPDATE RECORD COUNT
-    '==========================================================
-
-    Private Sub UpdateRecordCount()
-
-        If dgvUsers.DataSource Is Nothing Then
-
-            lblRecordCount.Text =
-                "0 users"
-
-            Return
-
-        End If
-
-
-        lblRecordCount.Text =
-            dgvUsers.Rows.Count.ToString() &
-            " users"
-
-    End Sub
-
-
-    '==========================================================
-    ' REFRESH USERS
-    '==========================================================
-
-    Private Sub RefreshUsers(
-        sender As Object,
-        e As EventArgs
-    )
-
-        txtSearch.Clear()
-
-        LoadUsers()
-
-        ClearFields()
-
-    End Sub
-
-
-    '==========================================================
-    ' CLEAR BUTTON
-    '==========================================================
-
-    Private Sub ClearFieldsButton(
-        sender As Object,
-        e As EventArgs
-    )
-
-        ClearFields()
-
-    End Sub
-
-
-    '==========================================================
-    ' CLEAR FIELDS
-    '==========================================================
-
-    Private Sub ClearFields()
-
-        txtUserID.Clear()
-
-        txtUsername.Clear()
-
-        txtFullName.Clear()
-
-        txtPassword.Clear()
-
-        If cmbRole.Items.Count > 0 Then
-            cmbRole.SelectedIndex = 3
-        End If
-
-        If cmbStatus.Items.Count > 0 Then
-            cmbStatus.SelectedIndex = 0
-        End If
-
-        dgvUsers.ClearSelection()
-
-    End Sub
-
-
-    '==========================================================
-    ' DATABASE ERROR
-    '==========================================================
-
-    Private Sub ShowDatabaseError(
-        ex As Exception
-    )
-
-        MessageBox.Show(
-            "A database error occurred." &
-            Environment.NewLine &
-            Environment.NewLine &
-            ex.Message,
-            "Database Error",
-            MessageBoxButtons.OK,
-            MessageBoxIcon.Error
-        )
-
-    End Sub
-
 End Class
