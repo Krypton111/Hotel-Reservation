@@ -1691,7 +1691,7 @@ Public Class ReservationsForm
                     "r.CheckOutDate, " &
                     "r.NumberOfNights AS Nights, " &
                     "r.NumberOfGuests, " &
-                    "r.RoomRate, "
+                    "r.RoomRate, " &
                     "r.TotalAmount, " &
                     "r.ReservationStatus, " &
                     "r.PaymentStatus, " &
@@ -2789,7 +2789,7 @@ Dim sql As String =
                     "r.CheckOutDate, " &
                     "r.NumberOfNights AS Nights, " &
                     "r.NumberOfGuests, " &
-                    "r.RoomRate, "
+                    "r.RoomRate, " &
                     "r.TotalAmount, " &
                     "r.ReservationStatus, " &
                     "r.PaymentStatus, " &
