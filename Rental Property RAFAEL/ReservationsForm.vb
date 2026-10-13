@@ -2066,48 +2066,24 @@ Dim sql As String =
         e As EventArgs
     )
 
-        If selectedReservationID = 0 Then
-
+        If selectedReservationID <= 0 Then
             MessageBox.Show(
                 "Please select a reservation first.",
                 "Update Reservation",
                 MessageBoxButtons.OK,
                 MessageBoxIcon.Warning
             )
-
             Return
-
         End If
 
-
-        If Not ValidateReservation() Then
-
-            Return
-
-        End If
-
+        If Not ValidateReservation() Then Return
 
         Try
-
-            Using connection =
-                DatabaseHelper.GetConnection()
-
+            Using connection = DatabaseHelper.GetConnection()
                 connection.Open()
 
-
-                Dim guest As GuestItem =
-                    DirectCast(
-                        cboGuest.SelectedItem,
-                        GuestItem
-                    )
-
-
-                Dim room As RoomItem =
-                    DirectCast(
-                        cboRoom.SelectedItem,
-                        RoomItem
-                    )
-
+                Dim guest As GuestItem = DirectCast(cboGuest.SelectedItem, GuestItem)
+                Dim room As RoomItem = DirectCast(cboRoom.SelectedItem, RoomItem)
 
                 If HasOverlappingReservation(
                     connection,
@@ -2116,21 +2092,37 @@ Dim sql As String =
                     dtpCheckOut.Value.Date,
                     selectedReservationID
                 ) Then
-
                     MessageBox.Show(
-                        "This room already has another active " &
-                        "reservation during the selected dates.",
+                        "This room already has another active reservation during the selected dates.",
                         "Room Unavailable",
                         MessageBoxButtons.OK,
                         MessageBoxIcon.Warning
                     )
-
                     Return
-
                 End If
 
+                Dim previousRoomID As Integer
+                Using oldRoomCommand As New SqlCommand(
+                    "SELECT RoomID FROM Reservations WHERE ReservationID = @ReservationID",
+                    connection
+                )
+                    oldRoomCommand.Parameters.Add("@ReservationID", SqlDbType.Int).Value = selectedReservationID
+                    Dim previousRoomValue As Object = oldRoomCommand.ExecuteScalar()
+                    If previousRoomValue Is Nothing OrElse previousRoomValue Is DBNull.Value Then
+                        MessageBox.Show(
+                            "The reservation no longer exists. Refresh the list and try again.",
+                            "Reservation Not Found",
+                            MessageBoxButtons.OK,
+                            MessageBoxIcon.Warning
+                        )
+                        LoadReservations()
+                        ClearFields()
+                        Return
+                    End If
+                    previousRoomID = Convert.ToInt32(previousRoomValue)
+                End Using
 
-Dim sql As String =
+                Dim sql As String =
                     "UPDATE Reservations SET " &
                     "GuestID = @GuestID, " &
                     "RoomID = @RoomID, " &
@@ -2143,78 +2135,38 @@ Dim sql As String =
                     "SpecialRequests = @SpecialRequests " &
                     "WHERE ReservationID = @ReservationID"
 
+                Using command As New SqlCommand(sql, connection)
+                    command.Parameters.Add("@GuestID", SqlDbType.Int).Value = guest.ID
+                    command.Parameters.Add("@RoomID", SqlDbType.Int).Value = room.ID
+                    command.Parameters.Add("@CheckInDate", SqlDbType.Date).Value = dtpCheckIn.Value.Date
+                    command.Parameters.Add("@CheckOutDate", SqlDbType.Date).Value = dtpCheckOut.Value.Date
+                    command.Parameters.Add("@NumberOfGuests", SqlDbType.Int).Value = Convert.ToInt32(nudNumberOfGuests.Value)
+                    command.Parameters.Add("@RoomRate", SqlDbType.Decimal).Value = room.Rate
+                    command.Parameters("@RoomRate").Precision = 12
+                    command.Parameters("@RoomRate").Scale = 2
+                    command.Parameters.Add("@ReservationStatus", SqlDbType.NVarChar, 30).Value = cboReservationStatus.Text
+                    command.Parameters.Add("@PaymentStatus", SqlDbType.NVarChar, 30).Value = cboPaymentStatus.Text
 
-                Using command As New SqlCommand(
-                    sql,
-                    connection
-                )
+                    If String.IsNullOrWhiteSpace(txtSpecialRequests.Text) Then
+                        command.Parameters.Add("@SpecialRequests", SqlDbType.NVarChar, 500).Value = DBNull.Value
+                    Else
+                        command.Parameters.Add("@SpecialRequests", SqlDbType.NVarChar, 500).Value = txtSpecialRequests.Text.Trim()
+                    End If
 
-                    command.Parameters.AddWithValue(
-                        "@GuestID",
-                        guest.ID
-                    )
+                    command.Parameters.Add("@ReservationID", SqlDbType.Int).Value = selectedReservationID
 
-                    command.Parameters.AddWithValue(
-                        "@RoomID",
-                        room.ID
-                    )
-
-                    command.Parameters.AddWithValue(
-                        "@CheckInDate",
-                        dtpCheckIn.Value.Date
-                    )
-
-                    command.Parameters.AddWithValue(
-                        "@CheckOutDate",
-                        dtpCheckOut.Value.Date
-                    )
-
-                    command.Parameters.AddWithValue(
-                        "@NumberOfGuests",
-                        Convert.ToInt32(nudNumberOfGuests.Value)
-                    )
-
-                    command.Parameters.AddWithValue(
-                        "@RoomRate",
-                        room.Rate
-                    )
-
-                    command.Parameters.AddWithValue(
-                        "@ReservationStatus",
-                        cboReservationStatus.Text
-                    )
-
-                    command.Parameters.AddWithValue(
-                        "@PaymentStatus",
-                        cboPaymentStatus.Text
-                    )
-
-                    command.Parameters.AddWithValue(
-                        "@SpecialRequests",
-                        txtSpecialRequests.Text.Trim()
-                    )
-
-                    command.Parameters.AddWithValue(
-                        "@ReservationID",
-                        selectedReservationID
-                    )
-
-                    command.ExecuteNonQuery()
-                    AuditLogger.Log("Changed reservation data", "A reservation record was created, updated, or otherwise changed.")
-                    
-
+                    If command.ExecuteNonQuery() <> 1 Then
+                        Throw New InvalidOperationException("The reservation was not found or was not updated.")
+                    End If
                 End Using
 
-
-                UpdateRoomStatusAfterReservation(
-                    connection,
-                    room.ID,
-                    cboReservationStatus.Text
-                )
-
+                If previousRoomID <> room.ID Then
+                    UpdateRoomStatusAfterReservation(connection, previousRoomID, String.Empty)
+                End If
+                UpdateRoomStatusAfterReservation(connection, room.ID, cboReservationStatus.Text)
             End Using
 
-
+            AuditLogger.Log("Updated reservation", "Updated a reservation record.")
             MessageBox.Show(
                 "Reservation updated successfully.",
                 "Aurelia Grand Hotel",
@@ -2222,101 +2174,129 @@ Dim sql As String =
                 MessageBoxIcon.Information
             )
 
-
             LoadReservations()
-
             LoadRoomsIntoComboBox()
-
             ClearFields()
 
-
         Catch ex As Exception
-
             MessageBox.Show(
-                "Unable to update reservation." &
-                Environment.NewLine &
-                Environment.NewLine &
-                ex.Message,
+                "Unable to update reservation." & Environment.NewLine & Environment.NewLine & ex.Message,
                 "Database Error",
                 MessageBoxButtons.OK,
                 MessageBoxIcon.Error
             )
-
         End Try
 
     End Sub
 
-
-    '==========================================================
-    ' DELETE RESERVATION
-    '==========================================================
 
     Private Sub DeleteReservationClicked(
         sender As Object,
         e As EventArgs
     )
 
-        If selectedReservationID = 0 Then
-
+        If selectedReservationID <= 0 Then
             MessageBox.Show(
                 "Please select a reservation first.",
                 "Delete Reservation",
                 MessageBoxButtons.OK,
                 MessageBoxIcon.Warning
             )
-
             Return
-
         End If
-
-
-        Dim result As DialogResult =
-            MessageBox.Show(
-                "Are you sure you want to delete this reservation?",
-                "Delete Reservation",
-                MessageBoxButtons.YesNo,
-                MessageBoxIcon.Question
-            )
-
-
-        If result <> DialogResult.Yes Then
-
-            Return
-
-        End If
-
 
         Try
-
-            Using connection =
-                DatabaseHelper.GetConnection()
-
+            Using connection = DatabaseHelper.GetConnection()
                 connection.Open()
 
-
-                Dim sql As String =
-                    "DELETE FROM Reservations " &
-                    "WHERE ReservationID = @ReservationID"
-
+                Dim roomID As Integer
+                Dim paymentCount As Integer
 
                 Using command As New SqlCommand(
-                    sql,
+                    "SELECT RoomID FROM Reservations WHERE ReservationID = @ReservationID",
                     connection
                 )
-
-                    command.Parameters.AddWithValue(
-                        "@ReservationID",
-                        selectedReservationID
-                    )
-
-                    command.ExecuteNonQuery()
-                    AuditLogger.Log("Changed reservation data", "A reservation record was created, updated, or otherwise changed.")
-                    
-
+                    command.Parameters.Add("@ReservationID", SqlDbType.Int).Value = selectedReservationID
+                    Dim value As Object = command.ExecuteScalar()
+                    If value Is Nothing OrElse value Is DBNull.Value Then
+                        MessageBox.Show(
+                            "The reservation no longer exists. Refresh the list and try again.",
+                            "Reservation Not Found",
+                            MessageBoxButtons.OK,
+                            MessageBoxIcon.Warning
+                        )
+                        LoadReservations()
+                        ClearFields()
+                        Return
+                    End If
+                    roomID = Convert.ToInt32(value)
                 End Using
 
+                Using command As New SqlCommand(
+                    "SELECT COUNT(*) FROM Payments WHERE ReservationID = @ReservationID",
+                    connection
+                )
+                    command.Parameters.Add("@ReservationID", SqlDbType.Int).Value = selectedReservationID
+                    paymentCount = Convert.ToInt32(command.ExecuteScalar())
+                End Using
+
+                Dim confirmation As String =
+                    "Are you sure you want to permanently delete this reservation?"
+
+                If paymentCount > 0 Then
+                    confirmation =
+                        "This reservation has " & paymentCount.ToString() &
+                        " linked payment record(s)." & Environment.NewLine & Environment.NewLine &
+                        "Deleting the reservation will also permanently delete those payment records." &
+                        Environment.NewLine & Environment.NewLine &
+                        "This action cannot be undone. Continue?"
+                End If
+
+                If MessageBox.Show(
+                    confirmation,
+                    "Confirm Reservation Deletion",
+                    MessageBoxButtons.YesNo,
+                    MessageBoxIcon.Warning
+                ) <> DialogResult.Yes Then
+                    Return
+                End If
+
+                Using transaction = connection.BeginTransaction()
+                    Try
+                        Using command As New SqlCommand(
+                            "DELETE FROM Payments WHERE ReservationID = @ReservationID",
+                            connection,
+                            transaction
+                        )
+                            command.Parameters.Add("@ReservationID", SqlDbType.Int).Value = selectedReservationID
+                            command.ExecuteNonQuery()
+                        End Using
+
+                        Using command As New SqlCommand(
+                            "DELETE FROM Reservations WHERE ReservationID = @ReservationID",
+                            connection,
+                            transaction
+                        )
+                            command.Parameters.Add("@ReservationID", SqlDbType.Int).Value = selectedReservationID
+                            If command.ExecuteNonQuery() <> 1 Then
+                                Throw New InvalidOperationException("The reservation was not found or could not be deleted.")
+                            End If
+                        End Using
+
+                        transaction.Commit()
+                    Catch
+                        transaction.Rollback()
+                        Throw
+                    End Try
+                End Using
+
+                UpdateRoomStatusAfterReservation(connection, roomID, String.Empty)
             End Using
 
+            AuditLogger.Log(
+                "Deleted reservation",
+                "Deleted reservation and associated payment records where present."
+            )
 
             MessageBox.Show(
                 "Reservation deleted successfully.",
@@ -2325,26 +2305,17 @@ Dim sql As String =
                 MessageBoxIcon.Information
             )
 
-
             LoadReservations()
-
             LoadRoomsIntoComboBox()
-
             ClearFields()
 
-
         Catch ex As Exception
-
             MessageBox.Show(
-                "Unable to delete reservation." &
-                Environment.NewLine &
-                Environment.NewLine &
-                ex.Message,
+                "Unable to delete reservation." & Environment.NewLine & Environment.NewLine & ex.Message,
                 "Database Error",
                 MessageBoxButtons.OK,
                 MessageBoxIcon.Error
             )
-
         End Try
 
     End Sub
@@ -2544,58 +2515,24 @@ Dim sql As String =
         reservationStatus As String
     )
 
-        Dim newStatus As String =
-            "Available"
-
-
-        If reservationStatus = "Reserved" Then
-
-            newStatus =
-                "Reserved"
-
-        ElseIf reservationStatus = "Checked-In" Then
-
-            newStatus =
-                "Occupied"
-
-        ElseIf reservationStatus = "Checked-Out" Then
-
-            newStatus =
-                "Available"
-
-        ElseIf reservationStatus = "Cancelled" Then
-
-            newStatus =
-                "Available"
-
-        End If
-
-
         Dim sql As String =
-            "UPDATE Rooms " &
-            "SET Status = @Status " &
+            "UPDATE Rooms SET Status = " &
+            "CASE " &
+            "WHEN EXISTS (" &
+            "SELECT 1 FROM Reservations " &
+            "WHERE RoomID = @RoomID AND ReservationStatus = 'Checked-In' " &
+            ") THEN 'Occupied' " &
+            "WHEN EXISTS (" &
+            "SELECT 1 FROM Reservations " &
+            "WHERE RoomID = @RoomID AND ReservationStatus = 'Reserved' " &
+            "AND CheckOutDate >= CAST(GETDATE() AS DATE) " &
+            ") THEN 'Reserved' " &
+            "ELSE 'Available' END " &
             "WHERE RoomID = @RoomID"
 
-
-        Using command As New SqlCommand(
-            sql,
-            connection
-        )
-
-            command.Parameters.AddWithValue(
-                "@Status",
-                newStatus
-            )
-
-            command.Parameters.AddWithValue(
-                "@RoomID",
-                roomID
-            )
-
+        Using command As New SqlCommand(sql, connection)
+            command.Parameters.Add("@RoomID", SqlDbType.Int).Value = roomID
             command.ExecuteNonQuery()
-                    AuditLogger.Log("Changed reservation data", "A reservation record was created, updated, or otherwise changed.")
-                    
-
         End Using
 
     End Sub
