@@ -13,7 +13,6 @@ Public Class SpecialRequestsForm
     Private cboGuest As ComboBox
     Private txtRoom As TextBox
     Private guestTable As DataTable
-    Private txtRoom As TextBox
     Private txtDetails As TextBox
     Private cboPriority As ComboBox
     Private cboStatus As ComboBox
