@@ -979,30 +979,29 @@ Public Class ReportsForm
     Private Sub LoadGuestReport()
 
         Try
-
             Dim query As String =
-                "SELECT " &
-                "GuestID AS [Guest ID], " &
-                "FullName AS [Guest Name], " &
-                "ContactNumber AS [Contact Number], " &
-                "Email AS [Email], " &
-                "Address AS [Address], " &
-                "City AS [City], " &
-                "Country AS [Country], " &
-                "ReservationCount AS [Reservations], " &
-                "TotalReservationValue AS [Reservation Value] " &
-                "FROM dbo.vw_GuestReport " &
-                "ORDER BY FullName"
+                "SELECT g.GuestID AS [Guest ID], " &
+                "g.FullName AS [Guest Name], " &
+                "g.ContactNumber AS [Contact Number], " &
+                "g.Email AS [Email], " &
+                "g.Address AS [Address], " &
+                "g.City AS [City], " &
+                "g.Country AS [Country], " &
+                "COUNT(r.ReservationID) AS [Reservations], " &
+                "COALESCE(SUM(CASE WHEN r.ReservationStatus <> 'Cancelled' " &
+                "THEN r.TotalAmount ELSE 0 END), 0) AS [Reservation Value] " &
+                "FROM dbo.Guests g " &
+                "LEFT JOIN dbo.Reservations r ON r.GuestID = g.GuestID " &
+                "AND ISNULL(r.IsArchived, 0) = 0 " &
+                "WHERE ISNULL(g.IsArchived, 0) = 0 " &
+                "GROUP BY g.GuestID, g.FullName, g.ContactNumber, g.Email, " &
+                "g.Address, g.City, g.Country " &
+                "ORDER BY g.FullName"
 
             LoadGrid(query)
-
-            statusLabel.Text =
-                "Showing registered guests and reservation history."
-
+            statusLabel.Text = "Showing registered guests and reservation history."
         Catch ex As Exception
-
             ShowDatabaseError(ex)
-
         End Try
 
     End Sub
@@ -1014,32 +1013,32 @@ Public Class ReportsForm
     Private Sub LoadPaymentReport()
 
         Try
-
             Dim query As String =
-                "SELECT " &
-                "PaymentID AS [Payment ID], " &
-                "PaymentDate AS [Payment Date], " &
-                "GuestName AS [Guest Name], " &
-                "RoomNumber AS [Room Number], " &
-                "RoomType AS [Room Type], " &
-                "ReservationID AS [Reservation ID], " &
-                "ReservationTotal AS [Reservation Total], " &
-                "PaymentAmount AS [Payment Amount], " &
-                "PaymentMethod AS [Payment Method], " &
-                "PaymentStatus AS [Payment Status], " &
-                "ReferenceNumber AS [Reference Number] " &
-                "FROM dbo.vw_PaymentReport " &
-                "ORDER BY PaymentDate DESC"
+                "SELECT p.PaymentID AS [Payment ID], " &
+                "p.PaymentDate AS [Payment Date], " &
+                "g.FullName AS [Guest Name], " &
+                "rm.RoomNumber AS [Room Number], " &
+                "rm.RoomType AS [Room Type], " &
+                "r.ReservationID AS [Reservation ID], " &
+                "r.TotalAmount AS [Reservation Total], " &
+                "p.PaymentAmount AS [Payment Amount], " &
+                "p.PaymentMethod AS [Payment Method], " &
+                "p.PaymentStatus AS [Payment Status], " &
+                "p.ReferenceNumber AS [Reference Number] " &
+                "FROM dbo.Payments p " &
+                "INNER JOIN dbo.Reservations r ON r.ReservationID = p.ReservationID " &
+                "INNER JOIN dbo.Guests g ON g.GuestID = r.GuestID " &
+                "INNER JOIN dbo.Rooms rm ON rm.RoomID = r.RoomID " &
+                "WHERE ISNULL(p.IsArchived, 0) = 0 " &
+                "AND ISNULL(r.IsArchived, 0) = 0 " &
+                "AND ISNULL(g.IsArchived, 0) = 0 " &
+                "AND ISNULL(rm.IsArchived, 0) = 0 " &
+                "ORDER BY p.PaymentDate DESC"
 
             LoadGrid(query)
-
-            statusLabel.Text =
-                "Showing hotel payments and transaction information."
-
+            statusLabel.Text = "Showing hotel payments and transaction information."
         Catch ex As Exception
-
             ShowDatabaseError(ex)
-
         End Try
 
     End Sub
@@ -1051,29 +1050,23 @@ Public Class ReportsForm
     Private Sub LoadRoomReport()
 
         Try
-
             Dim query As String =
-                "SELECT " &
-                "RoomID AS [Room ID], " &
+                "SELECT RoomID AS [Room ID], " &
                 "RoomNumber AS [Room Number], " &
                 "RoomType AS [Room Type], " &
                 "Capacity AS [Capacity], " &
                 "RatePerNight AS [Rate/Night], " &
                 "Status AS [Status], " &
-                "Floor AS [Floor], " &
+                "FloorNumber AS [Floor], " &
                 "Description AS [Description] " &
-                "FROM dbo.vw_RoomReport " &
-                "ORDER BY Floor, RoomNumber"
+                "FROM dbo.Rooms " &
+                "WHERE ISNULL(IsArchived, 0) = 0 " &
+                "ORDER BY FloorNumber, RoomNumber"
 
             LoadGrid(query)
-
-            statusLabel.Text =
-                "Showing all hotel rooms and current room status."
-
+            statusLabel.Text = "Showing all hotel rooms and current room status."
         Catch ex As Exception
-
             ShowDatabaseError(ex)
-
         End Try
 
     End Sub
@@ -1115,28 +1108,23 @@ Public Class ReportsForm
     Private Sub LoadTodaysCheckIns()
 
         Try
-
             Dim query As String =
-                "SELECT " &
-                "ReservationID AS [Reservation ID], " &
-                "GuestName AS [Guest Name], " &
-                "RoomNumber AS [Room Number], " &
-                "RoomType AS [Room Type], " &
-                "CheckInDate AS [Check-In], " &
-                "CheckOutDate AS [Check-Out], " &
-                "ReservationStatus AS [Status] " &
-                "FROM dbo.vw_TodaysCheckIns " &
-                "ORDER BY RoomNumber"
+                "SELECT r.ReservationID AS [Reservation ID], " &
+                "g.FullName AS [Guest Name], rm.RoomNumber AS [Room Number], " &
+                "rm.RoomType AS [Room Type], r.CheckInDate AS [Check-In], " &
+                "r.CheckOutDate AS [Check-Out], r.ReservationStatus AS [Status] " &
+                "FROM dbo.Reservations r " &
+                "INNER JOIN dbo.Guests g ON g.GuestID = r.GuestID " &
+                "INNER JOIN dbo.Rooms rm ON rm.RoomID = r.RoomID " &
+                "WHERE ISNULL(r.IsArchived, 0) = 0 " &
+                "AND r.CheckInDate = CONVERT(date, GETDATE()) " &
+                "AND r.ReservationStatus IN ('Reserved', 'Checked-In') " &
+                "ORDER BY rm.RoomNumber"
 
             LoadGrid(query)
-
-            statusLabel.Text =
-                "Showing today's scheduled check-ins."
-
+            statusLabel.Text = "Showing today's scheduled check-ins."
         Catch ex As Exception
-
             ShowDatabaseError(ex)
-
         End Try
 
     End Sub
@@ -1148,28 +1136,23 @@ Public Class ReportsForm
     Private Sub LoadTodaysCheckOuts()
 
         Try
-
             Dim query As String =
-                "SELECT " &
-                "ReservationID AS [Reservation ID], " &
-                "GuestName AS [Guest Name], " &
-                "RoomNumber AS [Room Number], " &
-                "RoomType AS [Room Type], " &
-                "CheckInDate AS [Check-In], " &
-                "CheckOutDate AS [Check-Out], " &
-                "ReservationStatus AS [Status] " &
-                "FROM dbo.vw_TodaysCheckOuts " &
-                "ORDER BY RoomNumber"
+                "SELECT r.ReservationID AS [Reservation ID], " &
+                "g.FullName AS [Guest Name], rm.RoomNumber AS [Room Number], " &
+                "rm.RoomType AS [Room Type], r.CheckInDate AS [Check-In], " &
+                "r.CheckOutDate AS [Check-Out], r.ReservationStatus AS [Status] " &
+                "FROM dbo.Reservations r " &
+                "INNER JOIN dbo.Guests g ON g.GuestID = r.GuestID " &
+                "INNER JOIN dbo.Rooms rm ON rm.RoomID = r.RoomID " &
+                "WHERE ISNULL(r.IsArchived, 0) = 0 " &
+                "AND r.CheckOutDate = CONVERT(date, GETDATE()) " &
+                "AND r.ReservationStatus = 'Checked-In' " &
+                "ORDER BY rm.RoomNumber"
 
             LoadGrid(query)
-
-            statusLabel.Text =
-                "Showing today's scheduled check-outs."
-
+            statusLabel.Text = "Showing today's scheduled check-outs."
         Catch ex As Exception
-
             ShowDatabaseError(ex)
-
         End Try
 
     End Sub
