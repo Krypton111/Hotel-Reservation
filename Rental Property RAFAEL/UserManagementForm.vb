@@ -94,24 +94,35 @@ Public Class UserManagementForm
 
         Dim configureUpperSplit As Action =
             Sub()
-                'Only apply the intended minimum sizes once the actual docked
-                'width can accommodate both panels and the splitter.
-                If upper.IsDisposed OrElse upper.Width < 695 Then Return
+                If upper.IsDisposed OrElse upper.Width < 500 Then Return
 
-                Dim desiredDistance As Integer = Math.Max(290, Math.Min(320, upper.Width - 405))
-                If upper.SplitterDistance <> desiredDistance Then
+                'Give the editor a wider share of the upper section while
+                'keeping enough room for the accounts grid.
+                Dim availableWidth As Integer = upper.Width - upper.SplitterWidth
+                Dim desiredDistance As Integer = Math.Max(330, Math.Min(390, CInt(availableWidth * 0.30)))
+                desiredDistance = Math.Min(desiredDistance, availableWidth - 260)
+                If desiredDistance > 0 AndAlso upper.SplitterDistance <> desiredDistance Then
                     upper.SplitterDistance = desiredDistance
                 End If
-
-                If upper.Panel1MinSize <> 290 Then upper.Panel1MinSize = 290
-                If upper.Panel2MinSize <> 400 Then upper.Panel2MinSize = 400
             End Sub
 
         AddHandler upper.SizeChanged, Sub() configureUpperSplit()
         AddHandler upper.HandleCreated, Sub() configureUpperSplit()
 
-        Dim editor As New Panel With {.Dock = DockStyle.Fill, .BackColor = WarmWhite, .Padding = New Padding(16)}
-        upper.Panel1.Controls.Add(editor)
+        'Make the account editor scroll vertically when the host area is too short.
+        Dim editorScroll As New Panel With {
+            .Dock = DockStyle.Fill,
+            .BackColor = WarmWhite,
+            .AutoScroll = True,
+            .Padding = New Padding(16)
+        }
+        upper.Panel1.Controls.Add(editorScroll)
+        Dim editor As New Panel With {
+            .Location = New Point(0, 0),
+            .Size = New Size(310, 480),
+            .BackColor = WarmWhite
+        }
+        editorScroll.Controls.Add(editor)
         AddLabel(editor, "ACCOUNT DETAILS", 16, 12, 270, 25, True)
         AddLabel(editor, "User ID", 16, 48, 270, 20, False)
         txtUserID = AddTextBox(editor, 16, 70, 270, 28, True)
@@ -195,6 +206,12 @@ Public Class UserManagementForm
         AddHandler dtTo.ValueChanged, Sub()
                                           If cmbPeriod.SelectedItem IsNot Nothing AndAlso cmbPeriod.SelectedItem.ToString() <> "Custom range" Then cmbPeriod.SelectedItem = "Custom range"
                                       End Sub
+
+        AddHandler editorScroll.ClientSizeChanged, Sub()
+                                                           If editor IsNot Nothing Then
+                                                               editor.Width = Math.Max(310, editorScroll.ClientSize.Width - 2)
+                                                           End If
+                                                       End Sub
 
         AddHandler Me.SizeChanged, Sub()
                                        If dgvUsers IsNot Nothing Then dgvUsers.Size = New Size(Math.Max(250, accounts.ClientSize.Width - 28), Math.Max(150, accounts.ClientSize.Height - 92))
