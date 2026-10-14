@@ -81,10 +81,26 @@ Public Class UserManagementForm
         root.Controls.Add(header, 0, 0)
 
         Dim upper As New SplitContainer With {
-            .Dock = DockStyle.Fill, .Orientation = Orientation.Vertical,
-            .SplitterDistance = 320, .BackColor = Ivory, .Panel1MinSize = 290, .Panel2MinSize = 400
+            .Dock = DockStyle.Fill,
+            .Orientation = Orientation.Vertical,
+            .BackColor = Ivory,
+            .Panel1MinSize = 290,
+            .Panel2MinSize = 400
         }
         root.Controls.Add(upper, 0, 1)
+
+        'Do not assign SplitterDistance during construction: the SplitContainer
+        'has not received its final docked width yet, which can throw
+        '"SplitterDistance must be between Panel1MinSize and Width - Panel2MinSize."
+        AddHandler upper.SizeChanged, Sub()
+                                          If upper.Width >= upper.Panel1MinSize + upper.Panel2MinSize Then
+                                              Dim desiredDistance As Integer = Math.Min(320, upper.Width - upper.Panel2MinSize)
+                                              desiredDistance = Math.Max(upper.Panel1MinSize, desiredDistance)
+                                              If upper.SplitterDistance <> desiredDistance Then
+                                                  upper.SplitterDistance = desiredDistance
+                                              End If
+                                          End If
+                                      End Sub
 
         Dim editor As New Panel With {.Dock = DockStyle.Fill, .BackColor = WarmWhite, .Padding = New Padding(16)}
         upper.Panel1.Controls.Add(editor)
