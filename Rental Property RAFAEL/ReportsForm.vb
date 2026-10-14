@@ -542,14 +542,15 @@ Public Class ReportsForm
         Dim availableWidth As Integer = Math.Max(100, contentPanel.ClientSize.Width)
         Dim availableHeight As Integer = Math.Max(180, contentPanel.ClientSize.Height)
 
-        'The six cards are 110 px tall and start 10 px below the panel top.
-        'Reserve 130 px for the cards and 58 px for the toolbar, then give
-        'the grid only the remaining client height.
-        Dim summaryHeight As Integer = 130
+        'Give the summary cards a generous dedicated section and cap the
+        'report table height. The table scrolls internally instead of expanding
+        'upward into the summary area.
+        Dim summaryHeight As Integer = 155
         Dim toolbarHeight As Integer = 58
         Dim statusHeight As Integer = 25
         Dim gridTop As Integer = summaryHeight + toolbarHeight
-        Dim gridHeight As Integer = Math.Max(40, availableHeight - gridTop - statusHeight)
+        Dim remainingGridHeight As Integer = Math.Max(80, availableHeight - gridTop - statusHeight)
+        Dim gridHeight As Integer = Math.Min(remainingGridHeight, 390)
 
         summaryPanel.SetBounds(leftEdge, topEdge, availableWidth, summaryHeight)
         toolbarPanel.SetBounds(leftEdge, summaryHeight, availableWidth, toolbarHeight)
