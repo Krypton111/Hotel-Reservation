@@ -623,6 +623,24 @@ Public Class GuestsForm
         ' EVENTS
         '======================================================
 
+        ' Staff accounts are strictly read-only: they can search and inspect
+        ' guest records, but cannot add, edit, archive, restore, or clear data.
+        If LoginForm.LoggedInRole.Equals("Staff", StringComparison.OrdinalIgnoreCase) Then
+            For Each field As TextBox In New TextBox() {
+                txtGuestID, txtFirstName, txtLastName, txtFullName,
+                txtContactNumber, txtEmail, txtAddress, txtCity, txtCountry
+            }
+                field.ReadOnly = True
+                field.BackColor = Color.FromArgb(239, 236, 228)
+            Next
+
+            btnAdd.Enabled = False
+            btnUpdate.Enabled = False
+            btnArchive.Enabled = False
+            btnViewArchived.Enabled = False
+            btnClear.Enabled = False
+        End If
+
         AddHandler txtFirstName.TextChanged,
             AddressOf NameChanged
 
