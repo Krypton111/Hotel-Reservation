@@ -10,6 +10,7 @@ BEGIN
     CREATE TABLE dbo.SpecialGuestRequests
     (
         RequestID INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_SpecialGuestRequests PRIMARY KEY,
+        RequestNumber AS ('SR-' + RIGHT('000000' + CONVERT(VARCHAR(12), RequestID), 6)) PERSISTED,
         GuestName NVARCHAR(160) NOT NULL,
         RoomNumber NVARCHAR(20) NULL,
         RequestDetails NVARCHAR(1000) NOT NULL,
@@ -30,7 +31,15 @@ BEGIN
 END;
 GO
 
-SELECT RequestID, GuestName, RoomNumber, Priority, Status, CreatedAt
+IF OBJECT_ID(N'dbo.SpecialGuestRequests', N'U') IS NOT NULL
+   AND COL_LENGTH(N'dbo.SpecialGuestRequests', N'RequestNumber') IS NULL
+BEGIN
+    ALTER TABLE dbo.SpecialGuestRequests
+    ADD RequestNumber AS ('SR-' + RIGHT('000000' + CONVERT(VARCHAR(12), RequestID), 6)) PERSISTED;
+END;
+GO
+
+SELECT RequestID, RequestNumber, GuestName, RoomNumber, Priority, Status, CreatedAt
 FROM dbo.SpecialGuestRequests
 ORDER BY CreatedAt DESC;
 GO
