@@ -36,6 +36,7 @@ Public Class MainForm
     Private btnPayments As Button
     Private btnReports As Button
     Private btnUserManagement As Button
+    Private btnSpecialRequests As Button
     Private btnLogout As Button
 
 
@@ -403,6 +404,11 @@ Public Class MainForm
                 "User Management"
             )
 
+        btnSpecialRequests =
+            CreateNavigationButton(
+                "Special Requests"
+            )
+
         btnLogout =
             CreateNavigationButton(
                 "Logout"
@@ -455,6 +461,7 @@ Public Class MainForm
                 442
             )
 
+        btnSpecialRequests.Location = New Point(20, 494)
 
         btnLogout.Anchor =
             AnchorStyles.Left Or
@@ -500,6 +507,8 @@ Public Class MainForm
         pnlNavigation.Controls.Add(
             btnUserManagement
         )
+
+        pnlNavigation.Controls.Add(btnSpecialRequests)
 
         pnlNavigation.Controls.Add(
             btnLogout
@@ -602,6 +611,8 @@ Public Class MainForm
 
         AddHandler btnUserManagement.Click,
             AddressOf UserManagementClicked
+
+        AddHandler btnSpecialRequests.Click, AddressOf SpecialRequestsClicked
 
         AddHandler btnLogout.Click,
             AddressOf LogoutClicked
@@ -751,6 +762,8 @@ Public Class MainForm
         btnUserManagement.Visible =
             False
 
+        btnSpecialRequests.Visible = False
+
 
         If role.Equals(
             "Admin",
@@ -774,6 +787,8 @@ Public Class MainForm
 
             btnUserManagement.Visible =
                 True
+
+            btnSpecialRequests.Visible = True
 
             Return
 
@@ -800,6 +815,8 @@ Public Class MainForm
             btnReports.Visible =
                 True
 
+            btnSpecialRequests.Visible = True
+
             Return
 
         End If
@@ -822,6 +839,8 @@ Public Class MainForm
             btnPayments.Visible =
                 True
 
+            btnSpecialRequests.Visible = True
+
             Return
 
         End If
@@ -837,6 +856,8 @@ Public Class MainForm
 
             btnRooms.Visible =
                 True
+
+            btnSpecialRequests.Visible = True
 
             Return
 
@@ -1689,6 +1710,11 @@ Public Class MainForm
 
     End Sub
 
+
+    Private Sub SpecialRequestsClicked(sender As Object, e As EventArgs)
+        AuditLogger.Log("Opened Special Requests", "Viewed guest service request queue.")
+        OpenPage(New SpecialRequestsForm(), "Special Guest Requests")
+    End Sub
 
     Private Sub UserManagementClicked(
         sender As Object,
