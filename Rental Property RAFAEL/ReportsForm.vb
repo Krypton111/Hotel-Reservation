@@ -549,14 +549,15 @@ Public Class ReportsForm
         Dim toolbarHeight As Integer = 58
         Dim statusHeight As Integer = 25
         Dim toolbarTop As Integer = availableHeight - statusHeight - 390 - toolbarHeight
-        toolbarTop = Math.Max(summaryHeight, toolbarTop)
+        toolbarTop = Math.Max(summaryHeight + 10, toolbarTop)
+        Dim summaryTop As Integer = Math.Max(topEdge, toolbarTop - summaryHeight - 10)
         Dim gridTop As Integer = toolbarTop + toolbarHeight
         Dim gridBottom As Integer = availableHeight - statusHeight
         Dim gridHeight As Integer = Math.Max(80, gridBottom - gridTop)
 
-        'Move both the toolbar and the table down together. Keep the table
-        'anchored at the bottom and preserve its compact height.
-        summaryPanel.SetBounds(leftEdge, topEdge, availableWidth, summaryHeight)
+        'Move the summary cards down as well, keeping them directly above the
+        'lowered toolbar and bottom-anchored table.
+        summaryPanel.SetBounds(leftEdge, summaryTop, availableWidth, summaryHeight)
         toolbarPanel.SetBounds(leftEdge, toolbarTop, availableWidth, toolbarHeight)
         reportGrid.SetBounds(leftEdge, gridTop, availableWidth, gridHeight)
         statusLabel.SetBounds(leftEdge + 2, availableHeight - statusHeight,
