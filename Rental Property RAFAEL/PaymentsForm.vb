@@ -655,7 +655,7 @@ Public Class PaymentsForm
 
         Dim lblReference As Label =
             CreateLabel(
-                "Reference Number",
+                "Auto-generated Reference Number",
                 New Point(20, 161)
             )
 
@@ -670,6 +670,9 @@ Public Class PaymentsForm
 
         txtReferenceNumber.Size =
             New Size(280, 30)
+
+        txtReferenceNumber.ReadOnly = True
+        txtReferenceNumber.BackColor = Color.FromArgb(238, 234, 225)
 
         formPanel.Controls.Add(txtReferenceNumber)
 
@@ -2720,6 +2723,31 @@ Public Class PaymentsForm
 
 
     '==========================================================
+    ' GENERATE UNIQUE PAYMENT REFERENCE
+    '==========================================================
+
+    Private Function GenerateNextReferenceNumber() As String
+
+        'Archived payments are intentionally included so their reference
+        'numbers are never assigned to a new payment.
+        Using connection = DatabaseHelper.GetConnection()
+            connection.Open()
+
+            Dim sql As String =
+                "SELECT ISNULL(MAX(TRY_CONVERT(BIGINT, SUBSTRING(ReferenceNumber, 5, 30))), 0) " &
+                "FROM Payments WITH (UPDLOCK, HOLDLOCK) " &
+                "WHERE ReferenceNumber LIKE 'PAY-%'"
+
+            Using command As New SqlCommand(sql, connection)
+                Dim lastNumber As Long = Convert.ToInt64(command.ExecuteScalar())
+                Return "PAY-" & (lastNumber + 1).ToString("D6")
+            End Using
+        End Using
+
+    End Function
+
+
+    '==========================================================
     ' CLEAR FIELDS
     '==========================================================
 
@@ -2752,7 +2780,7 @@ Public Class PaymentsForm
 
         cboPaymentStatus.SelectedIndex = -1
 
-        txtReferenceNumber.Clear()
+        txtReferenceNumber.Text = GenerateNextReferenceNumber()
 
         txtNotes.Clear()
 
