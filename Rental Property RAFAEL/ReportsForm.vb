@@ -178,8 +178,7 @@ Public Class ReportsForm
         contentPanel.BackColor =
             Ivory
 
-        contentPanel.Padding =
-            New Padding(25)
+        contentPanel.Padding = New Padding(0)
 
         Me.Controls.Add(contentPanel)
 
@@ -558,12 +557,13 @@ Public Class ReportsForm
         statusLabel.SetBounds(leftEdge + 2, availableHeight - statusHeight,
                               Math.Max(100, availableWidth - 4), statusHeight)
 
-        'Preserve the explicit geometry without changing z-order. The cards
-        'must remain fully inside the top summary panel.
-        summaryPanel.SendToBack()
+        'Ensure the summary cards are above the content background and that
+        'the grid cannot paint over them. Bounds do not overlap: the grid begins
+        'after the full summary and toolbar sections.
         toolbarPanel.BringToFront()
         reportGrid.BringToFront()
         statusLabel.BringToFront()
+        summaryPanel.BringToFront()
     End Sub
 
     '===========================================================
