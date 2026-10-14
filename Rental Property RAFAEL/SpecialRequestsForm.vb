@@ -32,14 +32,13 @@ Public Class SpecialRequestsForm
         BackColor = ivory
         Font = New Font("Segoe UI", 9.5F)
 
-        Dim header As New Panel With {.Dock = DockStyle.Top, .Height = 82, .BackColor = navy}
+        Dim header As New Panel With {.Dock = DockStyle.Fill, .Margin = New Padding(0), .BackColor = navy}
         Dim title As New Label With {.Text = "SPECIAL GUEST REQUESTS", .ForeColor = Color.White, .Font = New Font("Georgia", 21, FontStyle.Bold), .Location = New Point(26, 14), .AutoSize = True}
         Dim subtitle As New Label With {.Text = If(isStaff, "View requests and update their progress.", "Create and track guest service requests."), .ForeColor = Color.Gainsboro, .Location = New Point(29, 52), .AutoSize = True}
         header.Controls.AddRange(New Control() {title, subtitle})
-        Controls.Add(header)
 
-        Dim editor As New Panel With {.Dock = DockStyle.Top, .Height = If(isStaff, 82, 178), .Padding = New Padding(18), .BackColor = Color.FromArgb(253, 251, 247)}
-        Controls.Add(editor)
+        Dim editor As New Panel With {.Dock = DockStyle.Fill, .Margin = New Padding(0), .Padding = New Padding(18), .BackColor = Color.FromArgb(253, 251, 247)}
+
 
         If Not isStaff Then
             editor.Controls.Add(MakeLabel("Guest name *", 18, 8))
@@ -88,12 +87,28 @@ Public Class SpecialRequestsForm
             .Margin = New Padding(18)
         }
         AddHandler grid.CellClick, AddressOf GridCellClick
-        Dim gridHost As New Panel With {.Dock = DockStyle.Fill, .Padding = New Padding(18, 12, 18, 18), .BackColor = ivory}
+        Dim gridHost As New Panel With {.Dock = DockStyle.Fill, .Margin = New Padding(0), .Padding = New Padding(18, 12, 18, 18), .BackColor = ivory}
         gridHost.Controls.Add(grid)
-        Controls.Add(gridHost)
-        gridHost.BringToFront()
-        editor.BringToFront()
-        header.BringToFront()
+
+        ' Use explicit rows so the header and request editor keep their space
+        ' and the table fills only the remaining window height.
+        Dim root As New TableLayoutPanel With {
+            .Dock = DockStyle.Fill,
+            .Margin = New Padding(0),
+            .Padding = New Padding(0),
+            .ColumnCount = 1,
+            .RowCount = 3,
+            .BackColor = ivory
+        }
+        root.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 100.0F))
+        root.RowStyles.Add(New RowStyle(SizeType.Absolute, 82.0F))
+        root.RowStyles.Add(New RowStyle(SizeType.Absolute, If(isStaff, 82.0F, 178.0F)))
+        root.RowStyles.Add(New RowStyle(SizeType.Percent, 100.0F))
+        root.Controls.Add(header, 0, 0)
+        root.Controls.Add(editor, 0, 1)
+        root.Controls.Add(gridHost, 0, 2)
+        Controls.Add(root)
+
         If Not isStaff Then LoadGuestsForRequests()
         LoadRequests()
     End Sub
@@ -122,11 +137,12 @@ Public Class SpecialRequestsForm
                     "SELECT g.GuestID, g.FullName, " &
                     "COALESCE((SELECT TOP (1) rm.RoomNumber " &
                     "FROM dbo.Reservations r INNER JOIN dbo.Rooms rm ON rm.RoomID = r.RoomID " &
-                    "WHERE r.GuestID = g.GuestID AND r.IsArchived = 0 AND rm.IsArchived = 0 " &
+                    "WHERE r.GuestID = g.GuestID AND ISNULL(r.IsArchived, 0) = 0 AND ISNULL(rm.IsArchived, 0) = 0 " &
                     "AND r.ReservationStatus <> 'Cancelled' " &
-                    "AND CAST(GETDATE() AS date) >= CAST(r.CheckInDate AS date) " &
-                    "AND CAST(GETDATE() AS date) < CAST(r.CheckOutDate AS date) " &
-                    "ORDER BY r.CheckInDate DESC, r.ReservationID DESC), '') AS RoomNumber " &
+                    "ORDER BY CASE " &
+                    "WHEN CAST(GETDATE() AS date) >= CAST(r.CheckInDate AS date) AND CAST(GETDATE() AS date) < CAST(r.CheckOutDate AS date) THEN 0 " &
+                    "WHEN CAST(r.CheckInDate AS date) > CAST(GETDATE() AS date) THEN 1 ELSE 2 END, " &
+                    "r.CheckInDate DESC, r.ReservationID DESC), '') AS RoomNumber " &
                     "FROM dbo.Guests g WHERE g.IsArchived = 0 ORDER BY g.FullName;"
                 Using da As New SqlDataAdapter(sql, con)
                     guestTable = New DataTable()
