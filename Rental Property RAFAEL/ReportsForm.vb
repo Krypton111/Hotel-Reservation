@@ -431,8 +431,16 @@ Public Class ReportsForm
         reportGrid.SelectionMode =
             DataGridViewSelectionMode.FullRowSelect
 
+        'Keep the grid inside the space left after the summary, toolbar,
+        'and status bar. Let the user scroll horizontally for wide reports.
         reportGrid.AutoSizeColumnsMode =
-            DataGridViewAutoSizeColumnsMode.Fill
+            DataGridViewAutoSizeColumnsMode.None
+
+        reportGrid.AutoSizeRowsMode =
+            DataGridViewAutoSizeRowsMode.None
+
+        reportGrid.ScrollBars =
+            ScrollBars.Both
 
         reportGrid.RowHeadersVisible =
             False
@@ -479,11 +487,27 @@ Public Class ReportsForm
             )
 
         reportGrid.RowTemplate.Height =
-            35
+            32
+
+        reportGrid.ColumnHeadersHeightSizeMode =
+            DataGridViewColumnHeadersHeightSizeMode.DisableResizing
 
         contentPanel.Controls.Add(
             reportGrid
         )
+
+        'Docked controls are laid out according to z-order in WinForms.
+        'Explicitly establish the intended vertical stack so the grid cannot
+        'cover the report selector or summary cards.
+        statusLabel?.BringToFront()
+        reportGrid.BringToFront()
+        toolbarPanel.BringToFront()
+        summaryPanel.BringToFront()
+
+        AddHandler reportGrid.DataBindingComplete,
+            Sub(sender As Object, e As DataGridViewBindingCompleteEventArgs)
+                FormatGrid()
+            End Sub
 
 
         '-------------------------------------------------------
@@ -1211,10 +1235,32 @@ Public Class ReportsForm
 
         For Each column As DataGridViewColumn
             In reportGrid.Columns
+            column.SortMode = DataGridViewColumnSortMode.Automatic
+            column.MinimumWidth = 90
+            column.AutoSizeMode = DataGridViewAutoSizeColumnMode.None
+            column.Width = 130
+        Next
 
-            column.SortMode =
-                DataGridViewColumnSortMode.Automatic
-
+        'Give common fields readable widths; other columns retain a consistent
+        'width and remain accessible using the horizontal scrollbar.
+        Dim preferredWidths As New Dictionary(Of String, Integer) From {
+            {"Reservation ID", 105}, {"Guest Name", 165},
+            {"Contact Number", 135}, {"Email", 190},
+            {"Room Number", 110}, {"Room Type", 145},
+            {"Check-In", 120}, {"Check-Out", 120},
+            {"Guests", 80}, {"Nights", 80},
+            {"Rate/Night", 120}, {"Total Amount", 130},
+            {"Reservation Status", 150}, {"Payment Status", 135},
+            {"Guest ID", 90}, {"Payment ID", 95}, {"Payment Date", 130},
+            {"Payment Amount", 135}, {"Payment Method", 140},
+            {"Reference Number", 160}, {"Room ID", 90},
+            {"Capacity", 90}, {"Status", 120}, {"Floor", 80},
+            {"Description", 220}
+        }
+        For Each pair In preferredWidths
+            If reportGrid.Columns.Contains(pair.Key) Then
+                reportGrid.Columns(pair.Key).Width = pair.Value
+            End If
         Next
 
 
