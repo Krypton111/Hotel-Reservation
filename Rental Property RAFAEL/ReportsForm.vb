@@ -44,6 +44,7 @@ Public Class ReportsForm
     Private subtitleLabel As Label
 
     Private summaryPanel As Panel
+    Private toolbarPanel As Panel
 
     Private totalRoomsLabel As Label
     Private availableRoomsLabel As Label
@@ -189,11 +190,7 @@ Public Class ReportsForm
 
         summaryPanel = New Panel()
 
-        summaryPanel.Dock =
-            DockStyle.Top
-
-        summaryPanel.Height =
-            140
+        summaryPanel.Height = 140
 
         summaryPanel.BackColor =
             Ivory
@@ -260,13 +257,8 @@ Public Class ReportsForm
         ' TOOLBAR
         '-------------------------------------------------------
 
-        Dim toolbarPanel As New Panel()
-
-        toolbarPanel.Dock =
-            DockStyle.Top
-
-        toolbarPanel.Height =
-            65
+        toolbarPanel = New Panel()
+        toolbarPanel.Height = 65
 
         toolbarPanel.BackColor =
             Ivory
@@ -407,8 +399,8 @@ Public Class ReportsForm
 
         reportGrid = New DataGridView()
 
-        reportGrid.Dock =
-            DockStyle.Fill
+        reportGrid.Dock = DockStyle.None
+        reportGrid.Anchor = AnchorStyles.Top Or AnchorStyles.Bottom Or AnchorStyles.Left Or AnchorStyles.Right
 
         reportGrid.BackgroundColor =
             WarmWhite
@@ -511,11 +503,9 @@ Public Class ReportsForm
 
         statusLabel = New Label()
 
-        statusLabel.Dock =
-            DockStyle.Bottom
-
-        statusLabel.Height =
-            30
+        statusLabel.Dock = DockStyle.None
+        statusLabel.Height = 25
+        statusLabel.Anchor = AnchorStyles.Left Or AnchorStyles.Bottom
 
         statusLabel.Text =
             "Ready"
@@ -536,6 +526,38 @@ Public Class ReportsForm
             statusLabel
         )
 
+        'Use explicit bounds instead of relying on WinForms Dock z-order.
+        'This guarantees the grid starts below the summary cards and toolbar.
+        AddHandler contentPanel.Resize, AddressOf LayoutReportContent
+        LayoutReportContent(Nothing, EventArgs.Empty)
+
+    End Sub
+
+    Private Sub LayoutReportContent(sender As Object, e As EventArgs)
+        If contentPanel Is Nothing OrElse summaryPanel Is Nothing OrElse
+           reportGrid Is Nothing OrElse statusLabel Is Nothing OrElse
+           toolbarPanel Is Nothing Then Return
+
+        Dim leftEdge As Integer = 0
+        Dim topEdge As Integer = 0
+        Dim availableWidth As Integer = Math.Max(100, contentPanel.ClientSize.Width)
+        Dim availableHeight As Integer = Math.Max(180, contentPanel.ClientSize.Height)
+
+        summaryPanel.SetBounds(leftEdge, topEdge, availableWidth, 120)
+        toolbarPanel.SetBounds(leftEdge, 120, availableWidth, 58)
+
+        Dim statusHeight As Integer = 25
+        Dim gridTop As Integer = 178
+        Dim gridHeight As Integer = Math.Max(80, availableHeight - gridTop - statusHeight)
+
+        reportGrid.SetBounds(leftEdge, gridTop, availableWidth, gridHeight)
+        statusLabel.SetBounds(leftEdge + 2, availableHeight - statusHeight,
+                              Math.Max(100, availableWidth - 4), statusHeight)
+
+        summaryPanel.BringToFront()
+        toolbarPanel.BringToFront()
+        reportGrid.BringToFront()
+        statusLabel.BringToFront()
     End Sub
 
     '===========================================================
