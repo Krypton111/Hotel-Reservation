@@ -116,6 +116,29 @@ Public Class RoomsForm
 
         BuildForm()
 
+        ' Staff can inspect and search room information, but cannot change
+        ' room details, archive/restore rooms, or alter room status.
+        If LoginForm.LoggedInRole.Equals("Staff", StringComparison.OrdinalIgnoreCase) Then
+            txtRoomNumber.ReadOnly = True
+            txtRate.ReadOnly = True
+            txtDescription.ReadOnly = True
+            txtRoomID.ReadOnly = True
+            cboRoomType.Enabled = False
+            nudCapacity.Enabled = False
+            nudFloor.Enabled = False
+            cboStatus.Enabled = False
+
+            txtRoomNumber.BackColor = Color.FromArgb(239, 236, 228)
+            txtRate.BackColor = Color.FromArgb(239, 236, 228)
+            txtDescription.BackColor = Color.FromArgb(239, 236, 228)
+
+            btnAdd.Enabled = False
+            btnUpdate.Enabled = False
+            btnArchive.Enabled = False
+            btnViewArchived.Enabled = False
+            btnClear.Enabled = False
+        End If
+
         LoadRooms()
 
         ClearFields()
