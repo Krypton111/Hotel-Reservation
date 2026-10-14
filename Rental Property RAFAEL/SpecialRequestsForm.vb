@@ -97,7 +97,16 @@ Public Class SpecialRequestsForm
     End Function
 
     Private Function MakeButton(value As String, x As Integer, y As Integer, color As Color) As Button
-        Return New Button With {.Text = value, .Location = New Point(x, y), .Size = New Size(165, 38), .FlatStyle = FlatStyle.Flat, .FlatAppearance = New FlatButtonAppearance With {.BorderSize = 0}, .BackColor = color, .ForeColor = If(color = gold, Color.White, Color.White), .Cursor = Cursors.Hand}
+        Dim button As New Button()
+        button.Text = value
+        button.Location = New Point(x, y)
+        button.Size = New Size(165, 38)
+        button.FlatStyle = FlatStyle.Flat
+        button.FlatAppearance.BorderSize = 0
+        button.BackColor = color
+        button.ForeColor = Color.White
+        button.Cursor = Cursors.Hand
+        Return button
     End Function
 
     Private Sub LoadRequests()
