@@ -496,13 +496,8 @@ Public Class ReportsForm
             reportGrid
         )
 
-        'Docked controls are laid out according to z-order in WinForms.
-        'Explicitly establish the intended vertical stack so the grid cannot
-        'cover the report selector or summary cards.
-        statusLabel?.BringToFront()
-        reportGrid.BringToFront()
-        toolbarPanel.BringToFront()
-        summaryPanel.BringToFront()
+        'Keep the original Dock order. Calling BringToFront here causes the
+        'summary panel to cover the grid's column headers and upper rows.
 
         AddHandler reportGrid.DataBindingComplete,
             Sub(sender As Object, e As DataGridViewBindingCompleteEventArgs)
