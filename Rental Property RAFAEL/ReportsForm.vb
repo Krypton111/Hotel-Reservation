@@ -548,9 +548,12 @@ Public Class ReportsForm
         Dim summaryHeight As Integer = 155
         Dim toolbarHeight As Integer = 58
         Dim statusHeight As Integer = 25
+
+        'Keep the summary and toolbar at the top, and anchor the shorter grid
+        'toward the bottom so it no longer crowds the summary cards.
         Dim gridTop As Integer = summaryHeight + toolbarHeight
-        Dim remainingGridHeight As Integer = Math.Max(80, availableHeight - gridTop - statusHeight)
-        Dim gridHeight As Integer = Math.Min(remainingGridHeight, 390)
+        Dim gridBottom As Integer = availableHeight - statusHeight
+        Dim gridHeight As Integer = Math.Min(390, Math.Max(80, gridBottom - gridTop))
 
         summaryPanel.SetBounds(leftEdge, topEdge, availableWidth, summaryHeight)
         toolbarPanel.SetBounds(leftEdge, summaryHeight, availableWidth, toolbarHeight)
