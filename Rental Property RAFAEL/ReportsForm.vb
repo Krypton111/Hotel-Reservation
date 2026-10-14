@@ -889,24 +889,31 @@ Public Class ReportsForm
 
         Try
 
+            'Query the base tables directly so this report does not depend on a
+            'stale vw_ReservationReport definition from an older database version.
             Dim query As String =
                 "SELECT " &
-                "ReservationID AS [Reservation ID], " &
-                "GuestName AS [Guest Name], " &
-                "ContactNumber AS [Contact Number], " &
-                "Email AS [Email], " &
-                "RoomNumber AS [Room Number], " &
-                "RoomType AS [Room Type], " &
-                "CheckInDate AS [Check-In], " &
-                "CheckOutDate AS [Check-Out], " &
-                "NumberOfGuests AS [Guests], " &
-                "Nights AS [Nights], " &
-                "RatePerNight AS [Rate/Night], " &
-                "TotalAmount AS [Total Amount], " &
-                "ReservationStatus AS [Reservation Status], " &
-                "PaymentStatus AS [Payment Status] " &
-                "FROM dbo.vw_ReservationReport " &
-                "ORDER BY CheckInDate DESC"
+                "r.ReservationID AS [Reservation ID], " &
+                "g.FullName AS [Guest Name], " &
+                "g.ContactNumber AS [Contact Number], " &
+                "g.Email AS [Email], " &
+                "rm.RoomNumber AS [Room Number], " &
+                "rm.RoomType AS [Room Type], " &
+                "r.CheckInDate AS [Check-In], " &
+                "r.CheckOutDate AS [Check-Out], " &
+                "r.NumberOfGuests AS [Guests], " &
+                "r.NumberOfNights AS [Nights], " &
+                "r.RoomRate AS [Rate/Night], " &
+                "r.TotalAmount AS [Total Amount], " &
+                "r.ReservationStatus AS [Reservation Status], " &
+                "r.PaymentStatus AS [Payment Status] " &
+                "FROM dbo.Reservations r " &
+                "INNER JOIN dbo.Guests g ON g.GuestID = r.GuestID " &
+                "INNER JOIN dbo.Rooms rm ON rm.RoomID = r.RoomID " &
+                "WHERE ISNULL(r.IsArchived, 0) = 0 " &
+                "AND ISNULL(g.IsArchived, 0) = 0 " &
+                "AND ISNULL(rm.IsArchived, 0) = 0 " &
+                "ORDER BY r.CheckInDate DESC"
 
             LoadGrid(query)
 
