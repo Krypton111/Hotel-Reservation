@@ -80,27 +80,35 @@ Public Class UserManagementForm
         header.Controls.Add(subtitle)
         root.Controls.Add(header, 0, 0)
 
+        'Start with zero minimum sizes. WinForms can apply Panel1MinSize or
+        'Panel2MinSize immediately while the SplitContainer still has its tiny
+        'default width, which throws before docking/layout has completed.
         Dim upper As New SplitContainer With {
             .Dock = DockStyle.Fill,
             .Orientation = Orientation.Vertical,
             .BackColor = Ivory,
-            .Panel1MinSize = 290,
-            .Panel2MinSize = 400
+            .Panel1MinSize = 0,
+            .Panel2MinSize = 0
         }
         root.Controls.Add(upper, 0, 1)
 
-        'Do not assign SplitterDistance during construction: the SplitContainer
-        'has not received its final docked width yet, which can throw
-        '"SplitterDistance must be between Panel1MinSize and Width - Panel2MinSize."
-        AddHandler upper.SizeChanged, Sub()
-                                          If upper.Width >= upper.Panel1MinSize + upper.Panel2MinSize Then
-                                              Dim desiredDistance As Integer = Math.Min(320, upper.Width - upper.Panel2MinSize)
-                                              desiredDistance = Math.Max(upper.Panel1MinSize, desiredDistance)
-                                              If upper.SplitterDistance <> desiredDistance Then
-                                                  upper.SplitterDistance = desiredDistance
-                                              End If
-                                          End If
-                                      End Sub
+        Dim configureUpperSplit As Action =
+            Sub()
+                'Only apply the intended minimum sizes once the actual docked
+                'width can accommodate both panels and the splitter.
+                If upper.IsDisposed OrElse upper.Width < 695 Then Return
+
+                Dim desiredDistance As Integer = Math.Max(290, Math.Min(320, upper.Width - 405))
+                If upper.SplitterDistance <> desiredDistance Then
+                    upper.SplitterDistance = desiredDistance
+                End If
+
+                If upper.Panel1MinSize <> 290 Then upper.Panel1MinSize = 290
+                If upper.Panel2MinSize <> 400 Then upper.Panel2MinSize = 400
+            End Sub
+
+        AddHandler upper.SizeChanged, Sub() configureUpperSplit()
+        AddHandler upper.HandleCreated, Sub() configureUpperSplit()
 
         Dim editor As New Panel With {.Dock = DockStyle.Fill, .BackColor = WarmWhite, .Padding = New Padding(16)}
         upper.Panel1.Controls.Add(editor)
