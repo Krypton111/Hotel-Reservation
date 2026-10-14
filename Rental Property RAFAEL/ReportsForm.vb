@@ -543,23 +543,24 @@ Public Class ReportsForm
         Dim availableWidth As Integer = Math.Max(100, contentPanel.ClientSize.Width)
         Dim availableHeight As Integer = Math.Max(180, contentPanel.ClientSize.Height)
 
-        'Reserve enough height for all six summary cards so they are never
-        'clipped. Reduce the grid area instead of compressing the summary.
-        Dim summaryHeight As Integer = 150
+        'The six cards are 110 px tall and start 10 px below the panel top.
+        'Reserve 130 px for the cards and 58 px for the toolbar, then give
+        'the grid only the remaining client height.
+        Dim summaryHeight As Integer = 130
         Dim toolbarHeight As Integer = 58
         Dim statusHeight As Integer = 25
         Dim gridTop As Integer = summaryHeight + toolbarHeight
-        Dim gridHeight As Integer = Math.Max(60, availableHeight - gridTop - statusHeight)
+        Dim gridHeight As Integer = Math.Max(40, availableHeight - gridTop - statusHeight)
 
-        'Keep the summary cards in a fixed, fully visible top section.
-        'The table receives only the remaining space and scrolls internally.
         summaryPanel.SetBounds(leftEdge, topEdge, availableWidth, summaryHeight)
         toolbarPanel.SetBounds(leftEdge, summaryHeight, availableWidth, toolbarHeight)
         reportGrid.SetBounds(leftEdge, gridTop, availableWidth, gridHeight)
         statusLabel.SetBounds(leftEdge + 2, availableHeight - statusHeight,
                               Math.Max(100, availableWidth - 4), statusHeight)
 
-        summaryPanel.BringToFront()
+        'Preserve the explicit geometry without changing z-order. The cards
+        'must remain fully inside the top summary panel.
+        summaryPanel.SendToBack()
         toolbarPanel.BringToFront()
         reportGrid.BringToFront()
         statusLabel.BringToFront()
