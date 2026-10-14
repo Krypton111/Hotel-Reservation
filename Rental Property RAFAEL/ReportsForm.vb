@@ -543,13 +543,16 @@ Public Class ReportsForm
         Dim availableWidth As Integer = Math.Max(100, contentPanel.ClientSize.Width)
         Dim availableHeight As Integer = Math.Max(180, contentPanel.ClientSize.Height)
 
-        summaryPanel.SetBounds(leftEdge, topEdge, availableWidth, 120)
-        toolbarPanel.SetBounds(leftEdge, 120, availableWidth, 58)
-
+        'Reserve enough height for all six summary cards so they are never
+        'clipped. Reduce the grid area instead of compressing the summary.
+        Dim summaryHeight As Integer = 140
+        Dim toolbarHeight As Integer = 58
         Dim statusHeight As Integer = 25
-        Dim gridTop As Integer = 178
-        Dim gridHeight As Integer = Math.Max(80, availableHeight - gridTop - statusHeight)
+        Dim gridTop As Integer = summaryHeight + toolbarHeight
+        Dim gridHeight As Integer = Math.Max(60, availableHeight - gridTop - statusHeight)
 
+        summaryPanel.SetBounds(leftEdge, topEdge, availableWidth, summaryHeight)
+        toolbarPanel.SetBounds(leftEdge, summaryHeight, availableWidth, toolbarHeight)
         reportGrid.SetBounds(leftEdge, gridTop, availableWidth, gridHeight)
         statusLabel.SetBounds(leftEdge + 2, availableHeight - statusHeight,
                               Math.Max(100, availableWidth - 4), statusHeight)
