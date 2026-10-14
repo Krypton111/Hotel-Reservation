@@ -206,7 +206,7 @@ Public Class GuestsForm
             DockStyle.Top
 
         formPanel.Height =
-            285
+            225
 
         formPanel.BackColor =
             WarmWhite
@@ -228,7 +228,7 @@ Public Class GuestsForm
                 formPanel,
                 "Guest ID",
                 20,
-                125,
+                80,
                 130,
                 True
             )
@@ -238,8 +238,8 @@ Public Class GuestsForm
                 formPanel,
                 "First Name",
                 170,
-                125,
-                200,
+                80,
+                150,
                 False
             )
 
@@ -248,8 +248,8 @@ Public Class GuestsForm
                 formPanel,
                 "Last Name",
                 390,
-                125,
-                200,
+                80,
+                150,
                 False
             )
 
@@ -258,7 +258,7 @@ Public Class GuestsForm
                 formPanel,
                 "Full Name",
                 610,
-                125,
+                80,
                 250,
                 True
             )
@@ -268,7 +268,7 @@ Public Class GuestsForm
                 formPanel,
                 "Contact Number",
                 880,
-                125,
+                80,
                 220,
                 False
             )
@@ -278,7 +278,7 @@ Public Class GuestsForm
                 formPanel,
                 "Email Address",
                 20,
-                200,
+                150,
                 300,
                 False
             )
@@ -288,7 +288,7 @@ Public Class GuestsForm
                 formPanel,
                 "Address",
                 340,
-                200,
+                150,
                 360,
                 False
             )
@@ -298,7 +298,7 @@ Public Class GuestsForm
                 formPanel,
                 "City",
                 720,
-                200,
+                150,
                 180,
                 False
             )
@@ -308,7 +308,7 @@ Public Class GuestsForm
                 formPanel,
                 "Country",
                 920,
-                200,
+                150,
                 180,
                 False
             )
@@ -594,9 +594,9 @@ Public Class GuestsForm
         guestLayout.ColumnCount = 1
         guestLayout.RowCount = 5
         guestLayout.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 100.0F))
-        ' Allocate 285px to the guest information section.
-        ' The guest table receives the additional space freed by this adjustment.
-        guestLayout.RowStyles.Add(New RowStyle(SizeType.Absolute, 285.0F))
+        ' Use a compact guest information panel so it does not look oversized.
+        ' The table receives the space freed by this adjustment.
+        guestLayout.RowStyles.Add(New RowStyle(SizeType.Absolute, 225.0F))
         guestLayout.RowStyles.Add(New RowStyle(SizeType.Absolute, 50.0F))
         guestLayout.RowStyles.Add(New RowStyle(SizeType.Absolute, 50.0F))
         guestLayout.RowStyles.Add(New RowStyle(SizeType.Absolute, 35.0F))
