@@ -10,7 +10,9 @@ Public Class SpecialRequestsForm
         LoginForm.LoggedInRole.Equals("Staff", StringComparison.OrdinalIgnoreCase)
 
     Private grid As DataGridView
-    Private txtGuest As TextBox
+    Private cboGuest As ComboBox
+    Private txtRoom As TextBox
+    Private guestTable As DataTable
     Private txtRoom As TextBox
     Private txtDetails As TextBox
     Private cboPriority As ComboBox
@@ -37,25 +39,29 @@ Public Class SpecialRequestsForm
         header.Controls.AddRange(New Control() {title, subtitle})
         Controls.Add(header)
 
-        Dim editor As New Panel With {.Dock = DockStyle.Top, .Height = If(isStaff, 92, 190), .Padding = New Padding(18), .BackColor = Color.FromArgb(253, 251, 247)}
+        Dim editor As New Panel With {.Dock = DockStyle.Top, .Height = If(isStaff, 82, 178), .Padding = New Padding(18), .BackColor = Color.FromArgb(253, 251, 247)}
         Controls.Add(editor)
 
         If Not isStaff Then
-            editor.Controls.Add(MakeLabel("Guest name *", 18, 12))
-            txtGuest = New TextBox With {.Location = New Point(18, 36), .Size = New Size(230, 28), .MaxLength = 160}
-            editor.Controls.Add(txtGuest)
-            editor.Controls.Add(MakeLabel("Room number (optional)", 265, 12))
-            txtRoom = New TextBox With {.Location = New Point(265, 36), .Size = New Size(150, 28), .MaxLength = 20}
+            editor.Controls.Add(MakeLabel("Guest name *", 18, 8))
+            cboGuest = New ComboBox With {.Location = New Point(18, 31), .Size = New Size(270, 28), .DropDownStyle = ComboBoxStyle.DropDownList, .DisplayMember = "FullName", .ValueMember = "GuestID"}
+            AddHandler cboGuest.SelectedIndexChanged, AddressOf GuestSelectionChanged
+            editor.Controls.Add(cboGuest)
+
+            editor.Controls.Add(MakeLabel("Room number (automatic)", 305, 8))
+            txtRoom = New TextBox With {.Location = New Point(305, 31), .Size = New Size(165, 28), .ReadOnly = True, .BackColor = Color.FromArgb(239, 236, 228)}
             editor.Controls.Add(txtRoom)
-            editor.Controls.Add(MakeLabel("Priority", 432, 12))
-            cboPriority = New ComboBox With {.Location = New Point(432, 36), .Size = New Size(150, 28), .DropDownStyle = ComboBoxStyle.DropDownList}
+
+            editor.Controls.Add(MakeLabel("Priority", 488, 8))
+            cboPriority = New ComboBox With {.Location = New Point(488, 31), .Size = New Size(140, 28), .DropDownStyle = ComboBoxStyle.DropDownList}
             cboPriority.Items.AddRange(New Object() {"Normal", "High", "Urgent"})
             cboPriority.SelectedIndex = 0
             editor.Controls.Add(cboPriority)
-            editor.Controls.Add(MakeLabel("Request details *", 18, 72))
-            txtDetails = New TextBox With {.Location = New Point(18, 96), .Size = New Size(760, 58), .Multiline = True, .MaxLength = 1000, .Anchor = AnchorStyles.Top Or AnchorStyles.Left Or AnchorStyles.Right}
+
+            editor.Controls.Add(MakeLabel("Request details *", 18, 67))
+            txtDetails = New TextBox With {.Location = New Point(18, 89), .Size = New Size(680, 58), .Multiline = True, .MaxLength = 1000, .Anchor = AnchorStyles.Top Or AnchorStyles.Left Or AnchorStyles.Right}
             editor.Controls.Add(txtDetails)
-            btnCreate = MakeButton("CREATE REQUEST", 800, 96, gold)
+            btnCreate = MakeButton("CREATE REQUEST", 720, 95, gold)
             btnCreate.Anchor = AnchorStyles.Top Or AnchorStyles.Right
             AddHandler btnCreate.Click, AddressOf CreateRequest
             editor.Controls.Add(btnCreate)
@@ -89,6 +95,7 @@ Public Class SpecialRequestsForm
         gridHost.BringToFront()
         editor.BringToFront()
         header.BringToFront()
+        If Not isStaff Then LoadGuestsForRequests()
         LoadRequests()
     End Sub
 
@@ -109,15 +116,75 @@ Public Class SpecialRequestsForm
         Return button
     End Function
 
+    Private Sub LoadGuestsForRequests()
+        Try
+            Using con = DatabaseHelper.GetConnection()
+                Dim sql As String =
+                    "SELECT g.GuestID, g.FullName, " &
+                    "COALESCE((SELECT TOP (1) rm.RoomNumber " &
+                    "FROM dbo.Reservations r INNER JOIN dbo.Rooms rm ON rm.RoomID = r.RoomID " &
+                    "WHERE r.GuestID = g.GuestID AND r.IsArchived = 0 AND rm.IsArchived = 0 " &
+                    "AND r.ReservationStatus <> 'Cancelled' " &
+                    "AND CAST(GETDATE() AS date) >= CAST(r.CheckInDate AS date) " &
+                    "AND CAST(GETDATE() AS date) < CAST(r.CheckOutDate AS date) " &
+                    "ORDER BY r.CheckInDate DESC, r.ReservationID DESC), '') AS RoomNumber " &
+                    "FROM dbo.Guests g WHERE g.IsArchived = 0 ORDER BY g.FullName;"
+                Using da As New SqlDataAdapter(sql, con)
+                    guestTable = New DataTable()
+                    da.Fill(guestTable)
+                End Using
+            End Using
+            cboGuest.DataSource = Nothing
+            cboGuest.DisplayMember = "FullName"
+            cboGuest.ValueMember = "GuestID"
+            cboGuest.DataSource = guestTable
+            If guestTable.Rows.Count = 0 Then
+                txtRoom.Text = ""
+                MessageBox.Show("There are no active guest profiles to select.", "Special Requests", MessageBoxButtons.OK, MessageBoxIcon.Information)
+            Else
+                cboGuest.SelectedIndex = 0
+                UpdateRoomForSelectedGuest()
+            End If
+        Catch ex As Exception
+            MessageBox.Show("Could not load guest list and room assignments." & Environment.NewLine & Environment.NewLine & ex.Message, "Special Requests", MessageBoxButtons.OK, MessageBoxIcon.Error)
+        End Try
+    End Sub
+
+    Private Sub GuestSelectionChanged(sender As Object, e As EventArgs)
+        UpdateRoomForSelectedGuest()
+    End Sub
+
+    Private Sub UpdateRoomForSelectedGuest()
+        If cboGuest Is Nothing OrElse cboGuest.SelectedIndex < 0 OrElse guestTable Is Nothing Then Return
+        Dim rowView As DataRowView = TryCast(cboGuest.SelectedItem, DataRowView)
+        If rowView Is Nothing Then Return
+        Dim room = Convert.ToString(rowView("RoomNumber"))
+        txtRoom.Text = If(String.IsNullOrWhiteSpace(room), "No current room", room)
+    End Sub
+
     Private Sub LoadRequests()
         Try
             Using con = DatabaseHelper.GetConnection()
                 Using da As New SqlDataAdapter(
-                    "SELECT RequestID, GuestName, RoomNumber, RequestDetails, Priority, Status, CreatedByUsername, CreatedAt, UpdatedAt FROM dbo.SpecialGuestRequests ORDER BY CASE Status WHEN 'Urgent' THEN 0 WHEN 'Pending' THEN 1 WHEN 'In Progress' THEN 2 ELSE 3 END, CreatedAt DESC", con)
+                    "SELECT RequestID, RequestNumber, GuestName, RoomNumber, RequestDetails, Priority, Status, CreatedByUsername, CreatedAt, UpdatedAt FROM dbo.SpecialGuestRequests ORDER BY CASE Priority WHEN 'Urgent' THEN 0 WHEN 'High' THEN 1 ELSE 2 END, CASE Status WHEN 'Pending' THEN 0 WHEN 'In Progress' THEN 1 ELSE 2 END, CreatedAt DESC", con)
                     Dim dt As New DataTable()
                     da.Fill(dt)
                     grid.DataSource = dt
                     If grid.Columns.Contains("RequestID") Then grid.Columns("RequestID").Visible = False
+                    If grid.Columns.Contains("RequestNumber") Then
+                        grid.Columns("RequestNumber").HeaderText = "Queue Number"
+                        grid.Columns("RequestNumber").FillWeight = 75
+                    End If
+                    If grid.Columns.Contains("CreatedAt") Then grid.Columns("CreatedAt").HeaderText = "Created"
+                    If grid.Columns.Contains("UpdatedAt") Then grid.Columns("UpdatedAt").HeaderText = "Updated"
+                    If grid.Columns.Contains("Status") Then grid.Columns("Status").FillWeight = 75
+                    If grid.Columns.Contains("Priority") Then grid.Columns("Priority").FillWeight = 65
+                    If grid.Columns.Contains("RoomNumber") Then grid.Columns("RoomNumber").FillWeight = 60
+                    grid.RowTemplate.Height = 30
+                    grid.ColumnHeadersHeight = 34
+                    grid.AutoSizeRowsMode = DataGridViewAutoSizeRowsMode.None
+                    grid.ScrollBars = ScrollBars.Both
+                    grid.Dock = DockStyle.Fill
                     If grid.Columns.Contains("RequestDetails") Then grid.Columns("RequestDetails").FillWeight = 220
                     If grid.Columns.Contains("CreatedByUsername") Then grid.Columns("CreatedByUsername").HeaderText = "Requested By"
                     If grid.Columns.Contains("GuestName") Then grid.Columns("GuestName").HeaderText = "Guest"
@@ -130,16 +197,22 @@ Public Class SpecialRequestsForm
     End Sub
 
     Private Sub CreateRequest(sender As Object, e As EventArgs)
-        If String.IsNullOrWhiteSpace(txtGuest.Text) OrElse String.IsNullOrWhiteSpace(txtDetails.Text) Then
-            MessageBox.Show("Enter the guest name and request details.", "Missing Information", MessageBoxButtons.OK, MessageBoxIcon.Warning)
+        If cboGuest.SelectedIndex < 0 OrElse String.IsNullOrWhiteSpace(txtDetails.Text) Then
+            MessageBox.Show("Select a guest and enter the request details.", "Missing Information", MessageBoxButtons.OK, MessageBoxIcon.Warning)
             Return
         End If
+        Dim selectedGuest As DataRowView = TryCast(cboGuest.SelectedItem, DataRowView)
+        If selectedGuest Is Nothing Then Return
+        Dim selectedGuestName As String = Convert.ToString(selectedGuest("FullName"))
+        Dim selectedRoom As String = Convert.ToString(selectedGuest("RoomNumber"))
+        If String.Equals(selectedRoom, "No current room", StringComparison.OrdinalIgnoreCase) Then selectedRoom = ""
+
         Try
             Using con = DatabaseHelper.GetConnection()
                 con.Open()
                 Using cmd As New SqlCommand("INSERT INTO dbo.SpecialGuestRequests (GuestName, RoomNumber, RequestDetails, Priority, Status, CreatedByUserID, CreatedByUsername, CreatedAt, UpdatedAt) VALUES (@GuestName, NULLIF(@RoomNumber, ''), @Details, @Priority, 'Pending', @UserID, @Username, SYSDATETIME(), SYSDATETIME())", con)
-                    cmd.Parameters.Add("@GuestName", SqlDbType.NVarChar, 160).Value = txtGuest.Text.Trim()
-                    cmd.Parameters.Add("@RoomNumber", SqlDbType.NVarChar, 20).Value = If(txtRoom.Text.Trim(), "")
+                    cmd.Parameters.Add("@GuestName", SqlDbType.NVarChar, 160).Value = selectedGuestName
+                    cmd.Parameters.Add("@RoomNumber", SqlDbType.NVarChar, 20).Value = selectedRoom
                     cmd.Parameters.Add("@Details", SqlDbType.NVarChar, 1000).Value = txtDetails.Text.Trim()
                     cmd.Parameters.Add("@Priority", SqlDbType.NVarChar, 20).Value = cboPriority.SelectedItem.ToString()
                     cmd.Parameters.Add("@UserID", SqlDbType.Int).Value = LoginForm.LoggedInUserID
@@ -147,9 +220,9 @@ Public Class SpecialRequestsForm
                     cmd.ExecuteNonQuery()
                 End Using
             End Using
-            AuditLogger.Log("Created special guest request", "Guest: " & txtGuest.Text.Trim() & "; priority: " & cboPriority.SelectedItem.ToString())
-            txtGuest.Clear()
-            txtRoom.Clear()
+            AuditLogger.Log("Created special guest request", "Guest: " & selectedGuestName & "; priority: " & cboPriority.SelectedItem.ToString())
+            If cboGuest.Items.Count > 0 Then cboGuest.SelectedIndex = 0
+            UpdateRoomForSelectedGuest()
             txtDetails.Clear()
             cboPriority.SelectedIndex = 0
             LoadRequests()
