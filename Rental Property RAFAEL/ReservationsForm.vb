@@ -671,16 +671,13 @@ Public Class ReservationsForm
         txtNights.Size =
             New Size(140, 30)
 
-        txtNights.ReadOnly = True
-
-        txtNights.BackColor =
-            Color.FromArgb(
-                244,
-                242,
-                236
-            )
+        txtNights.ReadOnly = False
+        txtNights.BackColor = Color.White
+        txtNights.TextAlign = HorizontalAlignment.Center
 
         formPanel.Controls.Add(txtNights)
+
+        AddHandler txtNights.Leave, AddressOf NightsChanged
 
 
         '======================================================
@@ -1609,6 +1606,46 @@ Public Class ReservationsForm
         sender As Object,
         e As EventArgs
     )
+
+        CalculateReservationTotal()
+
+    End Sub
+
+
+    '==========================================================
+    ' MANUALLY CHANGE NUMBER OF NIGHTS
+    '==========================================================
+
+    Private Sub NightsChanged(
+        sender As Object,
+        e As EventArgs
+    )
+
+        Dim requestedNights As Integer
+
+        If Not Integer.TryParse(txtNights.Text.Trim(), requestedNights) OrElse requestedNights < 1 Then
+            MessageBox.Show(
+                "Enter a valid number of nights (at least 1).",
+                "Invalid Number of Nights",
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Warning
+            )
+            txtNights.Text = Math.Max(1, DateDiff(DateInterval.Day, dtpCheckIn.Value.Date, dtpCheckOut.Value.Date)).ToString()
+            Return
+        End If
+
+        Try
+            dtpCheckOut.Value = dtpCheckIn.Value.Date.AddDays(requestedNights)
+        Catch ex As ArgumentOutOfRangeException
+            MessageBox.Show(
+                "That number of nights is too large. Please enter a smaller number.",
+                "Invalid Number of Nights",
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Warning
+            )
+            txtNights.Text = Math.Max(1, DateDiff(DateInterval.Day, dtpCheckIn.Value.Date, dtpCheckOut.Value.Date)).ToString()
+            Return
+        End Try
 
         CalculateReservationTotal()
 
