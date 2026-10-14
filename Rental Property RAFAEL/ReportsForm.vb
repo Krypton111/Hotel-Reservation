@@ -548,11 +548,17 @@ Public Class ReportsForm
         Dim summaryHeight As Integer = 155
         Dim toolbarHeight As Integer = 58
         Dim statusHeight As Integer = 25
-        Dim gridTop As Integer = summaryHeight + toolbarHeight
+        Dim toolbarBottom As Integer = summaryHeight + toolbarHeight
         Dim gridBottom As Integer = availableHeight - statusHeight
-        'Stretch the grid from below the toolbar all the way to the bottom
-        'status area. This anchors the table at the bottom of the window.
-        Dim gridHeight As Integer = Math.Max(80, gridBottom - gridTop)
+
+        'Keep the table at its previous compact height, but position it against
+        'the bottom of the content area instead of stretching it taller.
+        Dim gridHeight As Integer = Math.Min(390, Math.Max(80, gridBottom - toolbarBottom))
+        Dim gridTop As Integer = gridBottom - gridHeight
+        If gridTop < toolbarBottom Then
+            gridTop = toolbarBottom
+            gridHeight = Math.Max(80, gridBottom - gridTop)
+        End If
 
         summaryPanel.SetBounds(leftEdge, topEdge, availableWidth, summaryHeight)
         toolbarPanel.SetBounds(leftEdge, summaryHeight, availableWidth, toolbarHeight)
