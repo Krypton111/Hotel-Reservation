@@ -30,14 +30,14 @@ Public Class RoomShowcaseForm
         New RoomShowcaseItem("Executive Room", "A polished space designed to balance productive work and comfortable downtime.",
             "Dedicated work area", "Premium furnishings", "Relaxation space",
             New String() {
-                "https://diamondhotel.com/wp-content/uploads/2024/02/Diamond-Club-Lounge-Banner-1920x293-1.jpg",
+                "https://thekashitour.com/assets/backend/images/room/1740211034.jpg",
                 "https://images.unsplash.com/photo-1618773928121-c32242e63f39?auto=format&fit=crop&w=1200&q=85",
                 "https://images.unsplash.com/photo-1596394516093-501ba68a0ba6?auto=format&fit=crop&w=1200&q=85"
             }),
         New RoomShowcaseItem("Junior Suite", "A generous open-plan retreat with room for both sleeping and relaxing.",
             "Bedroom and lounge feel", "Sofa or lounge seating", "Expanded floor space",
             New String() {
-                "https://images.trvl-media.com/lodging/1000000/30000/28400/28371/20a5daaa.jpg?impolicy=resizecrop&ra=fill&rh=575&rw=575",
+                "https://www.olympicpalacehotel.com/app/uploads/sites/131/2023/05/Junior-Suite-resized.jpg",
                 "https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?auto=format&fit=crop&w=1200&q=85",
                 "https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=1200&q=85"
             }),
@@ -45,7 +45,7 @@ Public Class RoomShowcaseForm
             "Separate living area", "Premium suite styling", "Spacious entertaining area",
             New String() {
                 "https://img.nh-hotels.net/naRVzr/nLed1M/original/NH_Collection_Helsinki_Grand_Hansa_Room_Presidential_Suite_general_view_bedroom.jpg?composite-to=center&output-quality=80&resize=1110%3A%2A",
-                "https://www.hilton.com/im/en/KWIWAWA/18053631/kwiwawa-presidential-suite-living-3.jpg?ch=2949&cw=4928&gravity=NorthWest&impolicy=crop&rh=484&rw=807&xposition=0&yposition=165",
+                "https://media.philstar.com/images/the-philippine-star/lifestyle/sunday-life/20170101/Manila-Hotel-Joey-Lina-1C.jpg",
                 "https://images.unsplash.com/photo-1582719508461-905c673771fd?auto=format&fit=crop&w=1200&q=85"
             })
     }
