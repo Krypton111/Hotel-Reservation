@@ -300,13 +300,42 @@ Public Class RoomShowcaseForm
     End Sub
 
     Private Shared Sub LoadPicture(picture As PictureBox, imageUrl As String)
+        AddHandler picture.LoadCompleted,
+            Sub(sender As Object, e As System.ComponentModel.AsyncCompletedEventArgs)
+                If picture.IsDisposed Then Return
+                If e.Error IsNot Nothing OrElse e.Cancelled Then
+                    picture.Image = CreatePlaceholderImage()
+                End If
+            End Sub
+
         Try
             picture.WaitOnLoad = False
             picture.LoadAsync(imageUrl)
         Catch
-            picture.BackColor = Color.FromArgb(232, 229, 222)
+            picture.Image = CreatePlaceholderImage()
         End Try
     End Sub
+
+    Private Shared Function CreatePlaceholderImage() As Image
+        Dim placeholder As New Bitmap(800, 450)
+        Using graphics As Graphics = Graphics.FromImage(placeholder)
+            graphics.Clear(Color.FromArgb(232, 229, 222))
+            Using titleFont As New Font("Georgia", 22.0F, FontStyle.Bold),
+                  subtitleFont As New Font("Segoe UI", 12.0F),
+                  titleBrush As New SolidBrush(Color.FromArgb(31, 42, 56)),
+                  subtitleBrush As New SolidBrush(Color.FromArgb(125, 125, 120))
+                Dim titleText As String = "AURELIA GRAND HOTEL"
+                Dim subtitleText As String = "ROOM PHOTO PREVIEW"
+                Dim titleSize As SizeF = graphics.MeasureString(titleText, titleFont)
+                Dim subtitleSize As SizeF = graphics.MeasureString(subtitleText, subtitleFont)
+                graphics.DrawString(titleText, titleFont, titleBrush,
+                    (placeholder.Width - titleSize.Width) / 2.0F, 190.0F)
+                graphics.DrawString(subtitleText, subtitleFont, subtitleBrush,
+                    (placeholder.Width - subtitleSize.Width) / 2.0F, 240.0F)
+            End Using
+        End Using
+        Return placeholder
+    End Function
 
     Private Class RoomShowcaseItem
         Public ReadOnly Name As String
