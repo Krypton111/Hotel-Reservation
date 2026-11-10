@@ -51,6 +51,7 @@ Public Class ReservationsForm
     Private txtSearch As TextBox
     Private btnSearch As Button
     Private btnRefresh As Button
+    Private btnFilter As Button
     Private btnGuestPolicies As Button
 
     Private txtReservationID As TextBox
@@ -268,6 +269,14 @@ Public Class ReservationsForm
 
         AddHandler btnGuestPolicies.Click,
             AddressOf GuestPoliciesClicked
+
+        btnFilter = New Button With {
+            .Location = New Point(885, 114),
+            .Size = New Size(110, 36)
+        }
+        HotelFilterForm.StyleFilterButton(btnFilter)
+        Me.Controls.Add(btnFilter)
+        AddHandler btnFilter.Click, AddressOf FilterButton_Click
 
         AddHandler txtSearch.KeyDown,
             AddressOf SearchKeyDown
@@ -1716,6 +1725,29 @@ Public Class ReservationsForm
 
 
     '==========================================================
+    '==========================================================
+    ' ADVANCED RESERVATION FILTER
+    '==========================================================
+
+    Private Sub FilterButton_Click(sender As Object, e As EventArgs)
+        Dim table As DataTable = HotelFilterForm.GetSourceTable(dgvReservations.DataSource)
+        If table Is Nothing Then Return
+
+        Dim fields As String() = {
+            "GuestName", "RoomNumber", "RoomType", "CheckInDate", "CheckOutDate",
+            "Nights", "NumberOfGuests", "RoomRate", "TotalAmount",
+            "ReservationStatus", "PaymentStatus", "SpecialRequests"
+        }
+
+        Using dialog As New HotelFilterForm(table, "Filter Reservations", fields)
+            If dialog.ShowDialog(Me) <> DialogResult.OK Then Return
+            table.DefaultView.RowFilter = dialog.FilterExpression
+            dgvReservations.DataSource = table.DefaultView
+            FormatGrid()
+        End Using
+    End Sub
+
+
     ' LOAD RESERVATIONS
     '==========================================================
 
