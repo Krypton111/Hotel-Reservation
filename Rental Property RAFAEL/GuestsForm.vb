@@ -348,6 +348,7 @@ Public Class GuestsForm
                 Color.White
             )
 
+        btnAdd.Size = New Size(125, 38)
         buttonPanel.Controls.Add(
             btnAdd
         )
@@ -355,11 +356,12 @@ Public Class GuestsForm
         btnUpdate =
             CreateActionButton(
                 "UPDATE",
-                155,
+                140,
                 Navy,
                 Color.White
             )
 
+        btnUpdate.Size = New Size(125, 38)
         buttonPanel.Controls.Add(
             btnUpdate
         )
@@ -367,7 +369,7 @@ Public Class GuestsForm
         btnArchive =
             CreateActionButton(
                 "ARCHIVE",
-                260,
+                280,
                 Color.FromArgb(
                     120,
                     65,
@@ -376,6 +378,7 @@ Public Class GuestsForm
                 Color.White
             )
 
+        btnArchive.Size = New Size(125, 38)
         buttonPanel.Controls.Add(
             btnArchive
         )
@@ -383,7 +386,7 @@ Public Class GuestsForm
         btnClear =
             CreateActionButton(
                 "CLEAR",
-                365,
+                420,
                 Color.FromArgb(
                     90,
                     90,
@@ -392,6 +395,7 @@ Public Class GuestsForm
                 Color.White
             )
 
+        btnClear.Size = New Size(125, 38)
         buttonPanel.Controls.Add(
             btnClear
         )
@@ -399,18 +403,19 @@ Public Class GuestsForm
         btnClose =
             CreateActionButton(
                 "CLOSE",
-                470,
+                560,
                 DeepNavy,
                 Color.White
             )
 
+        btnClose.Size = New Size(125, 38)
         buttonPanel.Controls.Add(
             btnClose
         )
 
         btnViewArchived = CreateActionButton(
             "SHOW ARCHIVED",
-            625,
+            700,
             Color.FromArgb(84, 88, 96),
             Color.White
         )
@@ -491,13 +496,14 @@ Public Class GuestsForm
 
         btnSearch.Location =
             New Point(520, 7)
+        btnSearch.Size = New Size(95, 38)
 
         searchPanel.Controls.Add(
             btnSearch
         )
 
         btnFilter = New Button With {
-            .Location = New Point(625, 7),
+            .Location = New Point(630, 7),
             .Size = New Size(110, 38)
         }
         HotelFilterForm.StyleFilterButton(btnFilter)
