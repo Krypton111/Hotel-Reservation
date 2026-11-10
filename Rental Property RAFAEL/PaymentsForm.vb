@@ -51,6 +51,7 @@ Public Class PaymentsForm
     Private txtSearch As TextBox
     Private btnSearch As Button
     Private btnRefresh As Button
+    Private btnPrintReceipt As Button
 
     Private txtPaymentID As TextBox
 
@@ -235,6 +236,19 @@ Public Class PaymentsForm
             )
 
         Me.Controls.Add(btnRefresh)
+
+        btnPrintReceipt =
+            CreateButton(
+                "Print Receipt",
+                New Point(615, 114),
+                New Size(135, 36),
+                Champagne
+            )
+
+        Me.Controls.Add(btnPrintReceipt)
+
+        AddHandler btnPrintReceipt.Click,
+            AddressOf PrintReceiptClicked
 
 
         AddHandler btnSearch.Click,
@@ -1725,7 +1739,10 @@ Public Class PaymentsForm
                     "VALUES " &
                     "(@ReservationID, @PaymentDate, @PaymentAmount, " &
                     "@PaymentMethod, @PaymentStatus, " &
-                    "@ReferenceNumber, @Notes)"
+                    "@ReferenceNumber, @Notes); " &
+                    "SELECT CAST(SCOPE_IDENTITY() AS INT);"
+
+                Dim newPaymentID As Integer = 0
 
 
                 Using command As New SqlCommand(
@@ -1768,7 +1785,17 @@ Public Class PaymentsForm
                         txtNotes.Text.Trim()
                     )
 
-                    command.ExecuteNonQuery()
+                    Dim insertedID As Object = command.ExecuteScalar()
+
+                    If insertedID Is Nothing OrElse insertedID Is DBNull.Value Then
+                        Throw New InvalidOperationException(
+                            "The payment was saved, but its new Payment ID could not be retrieved."
+                        )
+                    End If
+
+                    newPaymentID = Convert.ToInt32(insertedID)
+                    selectedPaymentID = newPaymentID
+
                     AuditLogger.Log("Changed payment data", "A payment record was created, updated, or otherwise changed.")
 
                 End Using
@@ -1794,6 +1821,21 @@ Public Class PaymentsForm
 
             LoadReservationsIntoComboBox()
 
+            Try
+                If selectedPaymentID > 0 Then
+                    AureliaHotelReceiptPrinter.Preview(selectedPaymentID)
+                End If
+            Catch receiptEx As Exception
+                MessageBox.Show(
+                    "The payment was recorded, but the receipt preview could not be opened." &
+                    Environment.NewLine & Environment.NewLine &
+                    receiptEx.Message,
+                    "Receipt Preview",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning
+                )
+            End Try
+
             ClearFields()
 
 
@@ -1809,6 +1851,42 @@ Public Class PaymentsForm
                 MessageBoxIcon.Error
             )
 
+        End Try
+
+    End Sub
+
+
+    '==========================================================
+    ' PRINT / REPRINT PAYMENT RECEIPT
+    '==========================================================
+
+    Private Sub PrintReceiptClicked(
+        sender As Object,
+        e As EventArgs
+    )
+
+        If selectedPaymentID <= 0 Then
+            MessageBox.Show(
+                "Please select a payment record first.",
+                "Print Receipt",
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Information
+            )
+            Return
+        End If
+
+        Try
+            AureliaHotelReceiptPrinter.Preview(selectedPaymentID)
+
+        Catch ex As Exception
+            MessageBox.Show(
+                "Unable to open the payment receipt preview." &
+                Environment.NewLine & Environment.NewLine &
+                ex.Message,
+                "Receipt Preview",
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Error
+            )
         End Try
 
     End Sub
@@ -2321,7 +2399,7 @@ Public Class PaymentsForm
             )
 
             command.ExecuteNonQuery()
-                    AuditLogger.Log("Changed payment data", "A payment record was created, updated, or otherwise changed.")
+            AuditLogger.Log("Changed payment data", "A payment record was created, updated, or otherwise changed.")
 
         End Using
 
