@@ -51,6 +51,7 @@ Public Class PaymentsForm
     Private txtSearch As TextBox
     Private btnSearch As Button
     Private btnRefresh As Button
+    Private btnFilter As Button
     Private btnPrintReceipt As Button
 
     Private txtPaymentID As TextBox
@@ -250,6 +251,13 @@ Public Class PaymentsForm
         AddHandler btnPrintReceipt.Click,
             AddressOf PrintReceiptClicked
 
+        btnFilter = New Button With {
+            .Location = New Point(765, 114),
+            .Size = New Size(110, 36)
+        }
+        HotelFilterForm.StyleFilterButton(btnFilter)
+        Me.Controls.Add(btnFilter)
+        AddHandler btnFilter.Click, AddressOf FilterButton_Click
 
         AddHandler btnSearch.Click,
             AddressOf SearchClicked
@@ -1460,6 +1468,28 @@ Public Class PaymentsForm
 
 
     '==========================================================
+    '==========================================================
+    ' ADVANCED PAYMENT FILTER
+    '==========================================================
+
+    Private Sub FilterButton_Click(sender As Object, e As EventArgs)
+        Dim table As DataTable = HotelFilterForm.GetSourceTable(dgvPayments.DataSource)
+        If table Is Nothing Then Return
+
+        Dim fields As String() = {
+            "GuestName", "RoomNumber", "PaymentDate", "PaymentAmount",
+            "PaymentMethod", "PaymentStatus", "ReferenceNumber", "Notes"
+        }
+
+        Using dialog As New HotelFilterForm(table, "Filter Payments", fields)
+            If dialog.ShowDialog(Me) <> DialogResult.OK Then Return
+            table.DefaultView.RowFilter = dialog.FilterExpression
+            dgvPayments.DataSource = table.DefaultView
+            FormatGrid()
+        End Using
+    End Sub
+
+
     ' LOAD PAYMENTS
     '==========================================================
 
