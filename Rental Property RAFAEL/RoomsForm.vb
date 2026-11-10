@@ -80,6 +80,7 @@ Public Class RoomsForm
     Private btnClear As Button
     Private btnSearch As Button
     Private btnRefresh As Button
+    Private btnFilter As Button
     Private btnClose As Button
 
     Private dgvRooms As DataGridView
@@ -374,9 +375,14 @@ Public Class RoomsForm
         btnViewArchived = CreateButton("Show Archived", Point.Empty, New Size(125, 36), Color.FromArgb(84, 88, 96))
         AddHandler btnViewArchived.Click, AddressOf ToggleArchivedRooms
 
+        btnFilter = New Button()
+        HotelFilterForm.StyleFilterButton(btnFilter)
+        btnFilter.Size = New Size(105, 36)
+        AddHandler btnFilter.Click, AddressOf FilterButton_Click
+
         actionsPanel.Controls.AddRange(New Control() {
             btnAdd, btnUpdate, btnArchive, btnClear,
-            btnSearch, btnRefresh, btnClose, btnViewArchived
+            btnSearch, btnRefresh, btnFilter, btnClose, btnViewArchived
         })
 
         editorLayout.Controls.Add(actionsPanel, 1, 3)
@@ -1723,6 +1729,28 @@ Public Class RoomsForm
 
 
     '===========================================================
+    '===========================================================
+    ' ADVANCED ROOM FILTER
+    '===========================================================
+
+    Private Sub FilterButton_Click(sender As Object, e As EventArgs)
+        Dim table As DataTable = HotelFilterForm.GetSourceTable(dgvRooms.DataSource)
+        If table Is Nothing Then Return
+
+        Dim fields As String() = {
+            "RoomNumber", "RoomType", "Capacity", "RatePerNight",
+            "Status", "FloorNumber", "Description"
+        }
+
+        Using dialog As New HotelFilterForm(table, "Filter Rooms", fields)
+            If dialog.ShowDialog(Me) <> DialogResult.OK Then Return
+            table.DefaultView.RowFilter = dialog.FilterExpression
+            dgvRooms.DataSource = table.DefaultView
+            FormatGrid()
+        End Using
+    End Sub
+
+
     ' REFRESH
     '===========================================================
 
