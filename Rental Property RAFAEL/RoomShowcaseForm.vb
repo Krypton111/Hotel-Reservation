@@ -1,4 +1,5 @@
 Imports System.Drawing
+Imports System.Collections.Generic
 Imports System.Windows.Forms
 
 Public Class RoomShowcaseForm
