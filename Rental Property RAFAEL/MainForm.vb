@@ -772,6 +772,8 @@ Public Class MainForm
         btnRooms.Visible =
             False
 
+        btnRoomShowcase.Visible = False
+
         btnPayments.Visible =
             False
 
@@ -797,6 +799,8 @@ Public Class MainForm
 
             btnRooms.Visible =
                 True
+
+            btnRoomShowcase.Visible = True
 
             btnPayments.Visible =
                 True
@@ -828,6 +832,8 @@ Public Class MainForm
             btnRooms.Visible =
                 True
 
+            btnRoomShowcase.Visible = True
+
             btnPayments.Visible =
                 True
 
@@ -854,6 +860,8 @@ Public Class MainForm
 
             btnRooms.Visible =
                 True
+
+            btnRoomShowcase.Visible = True
 
             btnPayments.Visible =
                 True
