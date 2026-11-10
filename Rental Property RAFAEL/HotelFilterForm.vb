@@ -1,5 +1,6 @@
 Imports System.Data
 Imports System.Collections.Generic
+Imports System.Linq
 Imports System.Globalization
 Imports System.Drawing
 Imports System.Windows.Forms
@@ -375,7 +376,7 @@ Public Class HotelFilterForm
 
     Public Shared Sub StyleFilterButton(button As Button)
         button.Text = "Filter"
-        button.BackColor = DeepNavy
+        button.BackColor = Color.FromArgb(20, 27, 38)
         button.ForeColor = Color.White
         button.FlatStyle = FlatStyle.Flat
         button.FlatAppearance.BorderSize = 0
