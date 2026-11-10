@@ -884,6 +884,8 @@ Public Class MainForm
             btnRooms.Visible =
                 True
 
+            btnRoomShowcase.Visible = True
+
             btnSpecialRequests.Visible = True
 
             Return
