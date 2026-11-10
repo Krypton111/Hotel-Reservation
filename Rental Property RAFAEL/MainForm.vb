@@ -33,6 +33,7 @@ Public Class MainForm
     Private btnReservations As Button
     Private btnGuests As Button
     Private btnRooms As Button
+    Private btnRoomShowcase As Button
     Private btnPayments As Button
     Private btnReports As Button
     Private btnUserManagement As Button
@@ -389,6 +390,11 @@ Public Class MainForm
                 "Rooms"
             )
 
+        btnRoomShowcase =
+            CreateNavigationButton(
+                "Room Showcase"
+            )
+
         btnPayments =
             CreateNavigationButton(
                 "Payments"
@@ -443,25 +449,31 @@ Public Class MainForm
                 286
             )
 
-        btnPayments.Location =
+        btnRoomShowcase.Location =
             New Point(
                 20,
                 338
             )
 
-        btnReports.Location =
+        btnPayments.Location =
             New Point(
                 20,
                 390
             )
 
-        btnUserManagement.Location =
+        btnReports.Location =
             New Point(
                 20,
                 442
             )
 
-        btnSpecialRequests.Location = New Point(20, 494)
+        btnUserManagement.Location =
+            New Point(
+                20,
+                494
+            )
+
+        btnSpecialRequests.Location = New Point(20, 546)
 
         btnLogout.Anchor =
             AnchorStyles.Left Or
@@ -494,6 +506,10 @@ Public Class MainForm
 
         pnlNavigation.Controls.Add(
             btnRooms
+        )
+
+        pnlNavigation.Controls.Add(
+            btnRoomShowcase
         )
 
         pnlNavigation.Controls.Add(
@@ -602,6 +618,9 @@ Public Class MainForm
 
         AddHandler btnRooms.Click,
             AddressOf RoomsClicked
+
+        AddHandler btnRoomShowcase.Click,
+            AddressOf RoomShowcaseClicked
 
         AddHandler btnPayments.Click,
             AddressOf PaymentsClicked
@@ -1671,6 +1690,23 @@ Public Class MainForm
             New RoomsForm(),
             "Room Management"
         )
+
+    End Sub
+
+
+    '===========================================================
+    ' ROOM SHOWCASE
+    '===========================================================
+
+    Private Sub RoomShowcaseClicked(
+        sender As Object,
+        e As EventArgs
+    )
+
+        AuditLogger.Log("Opened Room Showcase", "Viewed hotel room categories and photo galleries.")
+        Using showcase As New RoomShowcaseForm()
+            showcase.ShowDialog(Me)
+        End Using
 
     End Sub
 
