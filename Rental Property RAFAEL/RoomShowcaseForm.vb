@@ -9,43 +9,43 @@ Public Class RoomShowcaseForm
         New RoomShowcaseItem("Standard Room", "Thoughtfully appointed essentials for a restful and practical stay.",
             "Comfortable bed", "Work desk", "Private bathroom",
             New String() {
-                "https://antunovic.hr/PageFiles/image/7097f444-7808-43e8-8d41-b13a762df2c6.jpg",
+                "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=1200&q=85",
                 "https://images.unsplash.com/photo-1611892440504-42a792e24d32?auto=format&fit=crop&w=1200&q=85",
                 "https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=1200&q=85"
             }),
         New RoomShowcaseItem("Deluxe Room", "A more spacious retreat with upgraded furnishings and a refined atmosphere.",
             "King or twin setup", "Lounge corner", "Enhanced room finish",
             New String() {
-                "https://res.klook.com/images/fl_lossy.progressive%2Cq_65/c_fill%2Cw_1295%2Ch_863/w_80%2Cx_15%2Cy_15%2Cg_south_west%2Cl_Klook_water_br_trans_yhcmh3/activities/jxrjds8m23jbroturawu/%E6%88%90%E9%83%BD%E7%8E%AF%E7%90%83%E4%B8%AD%E5%BF%83%E5%A4%A9%E5%A0%82%E6%B4%B2%E9%99%85%E5%A4%A7%E9%A5%AD%E5%BA%97%E4%BD%8F%E5%AE%BF%E5%A5%97%E9%A4%90.jpg",
+                "https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&w=1200&q=85",
                 "https://images.unsplash.com/photo-1566665797739-1674de7a421a?auto=format&fit=crop&w=1200&q=85",
                 "https://images.unsplash.com/photo-1578683010236-d716f9a3f461?auto=format&fit=crop&w=1200&q=85"
             }),
         New RoomShowcaseItem("Superior Room", "An elevated guest room with a calm palette and added space to unwind.",
             "Comfort-focused layout", "Seating area", "City or garden outlook",
             New String() {
-                "https://azuraworldhotel.com/_next/image?q=75&url=%2F_next%2Fstatic%2Fmedia%2FOda5.56bd9464.webp&w=2560",
+                "https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?auto=format&fit=crop&w=1200&q=85",
                 "https://images.unsplash.com/photo-1582719508461-905c673771fd?auto=format&fit=crop&w=1200&q=85",
                 "https://images.unsplash.com/photo-1595576508898-0ad5c879a061?auto=format&fit=crop&w=1200&q=85"
             }),
         New RoomShowcaseItem("Executive Room", "A polished space designed to balance productive work and comfortable downtime.",
             "Dedicated work area", "Premium furnishings", "Relaxation space",
             New String() {
-                "https://thekashitour.com/assets/backend/images/room/1740211034.jpg",
+                "https://images.unsplash.com/photo-1600566753086-00f18fb6b3ea?auto=format&fit=crop&w=1200&q=85",
                 "https://images.unsplash.com/photo-1618773928121-c32242e63f39?auto=format&fit=crop&w=1200&q=85",
                 "https://images.unsplash.com/photo-1596394516093-501ba68a0ba6?auto=format&fit=crop&w=1200&q=85"
             }),
         New RoomShowcaseItem("Junior Suite", "A generous open-plan retreat with room for both sleeping and relaxing.",
             "Bedroom and lounge feel", "Sofa or lounge seating", "Expanded floor space",
             New String() {
-                "https://www.olympicpalacehotel.com/app/uploads/sites/131/2023/05/Junior-Suite-resized.jpg",
+                "https://images.unsplash.com/photo-1600607687644-c7171b42498f?auto=format&fit=crop&w=1200&q=85",
                 "https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?auto=format&fit=crop&w=1200&q=85",
                 "https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=1200&q=85"
             }),
         New RoomShowcaseItem("Presidential Suite", "An expansive signature accommodation with distinct living and sleeping spaces.",
             "Separate living area", "Premium suite styling", "Spacious entertaining area",
             New String() {
-                "https://img.nh-hotels.net/naRVzr/nLed1M/original/NH_Collection_Helsinki_Grand_Hansa_Room_Presidential_Suite_general_view_bedroom.jpg?composite-to=center&output-quality=80&resize=1110%3A%2A",
-                "https://media.philstar.com/images/the-philippine-star/lifestyle/sunday-life/20170101/Manila-Hotel-Joey-Lina-1C.jpg",
+                "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=1200&q=85",
+                "https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&w=1200&q=85",
                 "https://images.unsplash.com/photo-1582719508461-905c673771fd?auto=format&fit=crop&w=1200&q=85"
             })
     }
@@ -71,13 +71,25 @@ Public Class RoomShowcaseForm
     End Sub
 
     Private Sub BuildInterface()
-        Dim header As New Panel With {
-            .Dock = DockStyle.Top,
-            .Height = 112,
-            .BackColor = DeepNavy,
-            .Padding = New Padding(30, 17, 24, 14)
+        Dim root As New TableLayoutPanel With {
+            .Dock = DockStyle.Fill,
+            .BackColor = Ivory,
+            .ColumnCount = 1,
+            .RowCount = 3,
+            .Margin = New Padding(0),
+            .Padding = New Padding(0)
         }
+        root.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 100.0F))
+        root.RowStyles.Add(New RowStyle(SizeType.Absolute, 112.0F))
+        root.RowStyles.Add(New RowStyle(SizeType.Percent, 100.0F))
+        root.RowStyles.Add(New RowStyle(SizeType.Absolute, 38.0F))
 
+        Dim header As New Panel With {
+            .Dock = DockStyle.Fill,
+            .BackColor = DeepNavy,
+            .Padding = New Padding(30, 17, 24, 14),
+            .Margin = New Padding(0)
+        }
         Dim title As New Label With {
             .Text = "ROOM SHOWCASE",
             .Font = New Font("Georgia", 23.0F, FontStyle.Bold),
@@ -99,50 +111,55 @@ Public Class RoomShowcaseForm
         Dim content As New Panel With {
             .Dock = DockStyle.Fill,
             .BackColor = Ivory,
-            .Padding = New Padding(22, 20, 22, 20)
+            .Padding = New Padding(22, 12, 22, 10),
+            .Margin = New Padding(0)
         }
 
-        Dim intro As New Label With {
+        Dim intro As New Panel With {
+            .Dock = DockStyle.Top,
+            .Height = 58,
+            .BackColor = Ivory,
+            .Margin = New Padding(0)
+        }
+        Dim sectionTitle As New Label With {
             .Text = "FIND YOUR SPACE",
             .Font = New Font("Segoe UI Semibold", 10.0F, FontStyle.Bold),
             .ForeColor = DeepNavy,
             .AutoSize = True,
-            .Location = New Point(24, 15)
+            .Location = New Point(2, 2)
         }
-        content.Controls.Add(intro)
+        intro.Controls.Add(sectionTitle)
 
         Dim note As New Label With {
             .Text = "Select a room category to view its photo gallery and highlights.",
             .Font = New Font("Segoe UI", 9.0F),
             .ForeColor = MutedGray,
             .AutoSize = True,
-            .Location = New Point(24, 40)
+            .Location = New Point(2, 27)
         }
-        content.Controls.Add(note)
+        intro.Controls.Add(note)
 
         Dim gallery As New FlowLayoutPanel With {
-            .Location = New Point(18, 76),
-            .Size = New Size(1180, 620),
-            .Anchor = AnchorStyles.Top Or AnchorStyles.Bottom Or AnchorStyles.Left Or AnchorStyles.Right,
+            .Dock = DockStyle.Fill,
             .AutoScroll = True,
             .WrapContents = True,
             .FlowDirection = FlowDirection.LeftToRight,
             .BackColor = Ivory,
-            .Padding = New Padding(4, 6, 4, 10)
+            .Padding = New Padding(4, 8, 4, 12),
+            .Margin = New Padding(0)
         }
 
-        For index As Integer = 0 To roomTypes.Count - 1
-            Dim item = roomTypes(index)
+        For Each item As RoomShowcaseItem In roomTypes
             gallery.Controls.Add(CreateRoomCard(item))
-            If index = 2 Then gallery.SetFlowBreak(gallery.Controls(gallery.Controls.Count - 1), True)
         Next
 
         content.Controls.Add(gallery)
+        content.Controls.Add(intro)
 
         Dim footer As New Panel With {
-            .Dock = DockStyle.Bottom,
-            .Height = 38,
-            .BackColor = Ivory
+            .Dock = DockStyle.Fill,
+            .BackColor = Ivory,
+            .Margin = New Padding(0)
         }
         Dim footerText As New Label With {
             .Text = "Images are illustrative references. Confirm room details and availability in Room Management and Reservations.",
@@ -153,14 +170,15 @@ Public Class RoomShowcaseForm
         }
         footer.Controls.Add(footerText)
 
-        Me.Controls.Add(content)
-        Me.Controls.Add(footer)
-        Me.Controls.Add(header)
+        root.Controls.Add(header, 0, 0)
+        root.Controls.Add(content, 0, 1)
+        root.Controls.Add(footer, 0, 2)
+        Me.Controls.Add(root)
     End Sub
 
     Private Function CreateRoomCard(item As RoomShowcaseItem) As Panel
         Dim card As New Panel With {
-            .Size = New Size(365, 340),
+            .Size = New Size(350, 330),
             .BackColor = WarmWhite,
             .Margin = New Padding(8, 7, 8, 12),
             .BorderStyle = BorderStyle.FixedSingle
@@ -168,7 +186,7 @@ Public Class RoomShowcaseForm
 
         Dim picture As New PictureBox With {
             .Location = New Point(0, 0),
-            .Size = New Size(363, 188),
+            .Size = New Size(348, 175),
             .SizeMode = PictureBoxSizeMode.Zoom,
             .BackColor = Color.FromArgb(232, 229, 222)
         }
@@ -180,8 +198,8 @@ Public Class RoomShowcaseForm
             .Font = New Font("Segoe UI Semibold", 12.0F, FontStyle.Bold),
             .ForeColor = DeepNavy,
             .AutoSize = False,
-            .Location = New Point(18, 201),
-            .Size = New Size(325, 25)
+            .Location = New Point(18, 188),
+            .Size = New Size(312, 25)
         }
         card.Controls.Add(category)
 
@@ -189,15 +207,15 @@ Public Class RoomShowcaseForm
             .Text = item.Description,
             .Font = New Font("Segoe UI", 9.0F),
             .ForeColor = Charcoal,
-            .Location = New Point(19, 232),
-            .Size = New Size(325, 42)
+            .Location = New Point(19, 218),
+            .Size = New Size(312, 48)
         }
         card.Controls.Add(description)
 
         Dim viewButton As New Button With {
             .Text = "VIEW PHOTO GALLERY",
-            .Location = New Point(18, 286),
-            .Size = New Size(325, 38),
+            .Location = New Point(18, 278),
+            .Size = New Size(312, 36),
             .BackColor = DeepNavy,
             .ForeColor = Color.White,
             .FlatStyle = FlatStyle.Flat,
@@ -220,10 +238,23 @@ Public Class RoomShowcaseForm
             details.BackColor = Ivory
             details.Font = New Font("Segoe UI", 9.5F)
 
+            Dim layout As New TableLayoutPanel With {
+                .Dock = DockStyle.Fill,
+                .BackColor = Ivory,
+                .ColumnCount = 1,
+                .RowCount = 3,
+                .Margin = New Padding(0),
+                .Padding = New Padding(0)
+            }
+            layout.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 100.0F))
+            layout.RowStyles.Add(New RowStyle(SizeType.Absolute, 105.0F))
+            layout.RowStyles.Add(New RowStyle(SizeType.Percent, 100.0F))
+            layout.RowStyles.Add(New RowStyle(SizeType.Absolute, 72.0F))
+
             Dim header As New Panel With {
-                .Dock = DockStyle.Top,
-                .Height = 105,
-                .BackColor = DeepNavy
+                .Dock = DockStyle.Fill,
+                .BackColor = DeepNavy,
+                .Margin = New Padding(0)
             }
             Dim title As New Label With {
                 .Text = item.Name.ToUpperInvariant(),
@@ -247,20 +278,21 @@ Public Class RoomShowcaseForm
                 .AutoScroll = True,
                 .WrapContents = True,
                 .FlowDirection = FlowDirection.LeftToRight,
-                .Padding = New Padding(18, 18, 18, 18),
-                .BackColor = Ivory
+                .Padding = New Padding(14, 14, 14, 18),
+                .BackColor = Ivory,
+                .Margin = New Padding(0)
             }
 
             For index As Integer = 0 To item.Photos.Length - 1
                 Dim tile As New Panel With {
-                    .Size = New Size(510, 285),
+                    .Size = New Size(500, 300),
                     .BackColor = WarmWhite,
                     .Margin = New Padding(8),
                     .BorderStyle = BorderStyle.FixedSingle
                 }
                 Dim photo As New PictureBox With {
                     .Location = New Point(0, 0),
-                    .Size = New Size(508, 245),
+                    .Size = New Size(498, 255),
                     .SizeMode = PictureBoxSizeMode.Zoom,
                     .BackColor = Color.FromArgb(232, 229, 222)
                 }
@@ -271,30 +303,32 @@ Public Class RoomShowcaseForm
                     .Text = item.Name & " • View " & (index + 1).ToString(),
                     .Font = New Font("Segoe UI Semibold", 9.0F, FontStyle.Bold),
                     .ForeColor = DeepNavy,
-                    .Location = New Point(14, 251),
-                    .Size = New Size(480, 25)
+                    .Location = New Point(14, 263),
+                    .Size = New Size(470, 25)
                 }
                 tile.Controls.Add(caption)
                 content.Controls.Add(tile)
             Next
 
             Dim footer As New Panel With {
-                .Dock = DockStyle.Bottom,
-                .Height = 62,
-                .BackColor = WarmWhite
+                .Dock = DockStyle.Fill,
+                .BackColor = WarmWhite,
+                .Margin = New Padding(0),
+                .Padding = New Padding(20, 8, 20, 8)
             }
             Dim highlights As New Label With {
                 .Text = "HIGHLIGHTS: " & String.Join("  •  ", item.Highlights),
                 .Font = New Font("Segoe UI Semibold", 8.5F, FontStyle.Bold),
                 .ForeColor = Charcoal,
-                .AutoSize = True,
-                .Location = New Point(22, 22)
+                .Dock = DockStyle.Fill,
+                .TextAlign = ContentAlignment.MiddleLeft
             }
             footer.Controls.Add(highlights)
 
-            details.Controls.Add(content)
-            details.Controls.Add(footer)
-            details.Controls.Add(header)
+            layout.Controls.Add(header, 0, 0)
+            layout.Controls.Add(content, 0, 1)
+            layout.Controls.Add(footer, 0, 2)
+            details.Controls.Add(layout)
             details.ShowDialog(Me)
         End Using
     End Sub
