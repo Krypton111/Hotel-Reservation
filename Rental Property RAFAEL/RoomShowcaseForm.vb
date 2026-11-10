@@ -6,47 +6,47 @@ Public Class RoomShowcaseForm
     Inherits Form
 
     Private ReadOnly roomTypes As New List(Of RoomShowcaseItem) From {
-        New RoomShowcaseItem("Standard Room", "Thoughtfully appointed essentials for a restful and practical stay.",
+        New RoomShowcaseItem("Standard Room", "A practical, comfortable guest room with essential furnishings and a simple, welcoming layout.",
             "Comfortable bed", "Work desk", "Private bathroom",
             New String() {
-                "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=1200&q=85",
                 "https://images.unsplash.com/photo-1611892440504-42a792e24d32?auto=format&fit=crop&w=1200&q=85",
-                "https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=1200&q=85"
+                "https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=1200&q=85",
+                "https://images.unsplash.com/photo-1566665797739-1674de7a421a?auto=format&fit=crop&w=1200&q=85"
             }),
-        New RoomShowcaseItem("Deluxe Room", "A more spacious retreat with upgraded furnishings and a refined atmosphere.",
+        New RoomShowcaseItem("Deluxe Room", "A more spacious room with upgraded finishes, layered lighting, and a refined guest-room atmosphere.",
             "King or twin setup", "Lounge corner", "Enhanced room finish",
             New String() {
-                "https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&w=1200&q=85",
-                "https://images.unsplash.com/photo-1566665797739-1674de7a421a?auto=format&fit=crop&w=1200&q=85",
-                "https://images.unsplash.com/photo-1578683010236-d716f9a3f461?auto=format&fit=crop&w=1200&q=85"
-            }),
-        New RoomShowcaseItem("Superior Room", "An elevated guest room with a calm palette and added space to unwind.",
-            "Comfort-focused layout", "Seating area", "City or garden outlook",
-            New String() {
-                "https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?auto=format&fit=crop&w=1200&q=85",
+                "https://images.unsplash.com/photo-1578683010236-d716f9a3f461?auto=format&fit=crop&w=1200&q=85",
                 "https://images.unsplash.com/photo-1582719508461-905c673771fd?auto=format&fit=crop&w=1200&q=85",
                 "https://images.unsplash.com/photo-1595576508898-0ad5c879a061?auto=format&fit=crop&w=1200&q=85"
             }),
-        New RoomShowcaseItem("Executive Room", "A polished space designed to balance productive work and comfortable downtime.",
+        New RoomShowcaseItem("Superior Room", "An elevated room concept with a more generous layout, stylish furnishings, and a relaxing seating area.",
+            "Comfort-focused layout", "Seating area", "City or garden outlook",
+            New String() {
+                "https://images.unsplash.com/photo-1618773928121-c32242e63f39?auto=format&fit=crop&w=1200&q=85",
+                "https://images.unsplash.com/photo-1596394516093-501ba68a0ba6?auto=format&fit=crop&w=1200&q=85",
+                "https://images.unsplash.com/photo-1540518614846-7eded433c457?auto=format&fit=crop&w=1200&q=85"
+            }),
+        New RoomShowcaseItem("Executive Room", "A polished, business-oriented retreat featuring premium finishes and a more sophisticated interior.",
             "Dedicated work area", "Premium furnishings", "Relaxation space",
             New String() {
                 "https://images.unsplash.com/photo-1600566753086-00f18fb6b3ea?auto=format&fit=crop&w=1200&q=85",
-                "https://images.unsplash.com/photo-1618773928121-c32242e63f39?auto=format&fit=crop&w=1200&q=85",
-                "https://images.unsplash.com/photo-1596394516093-501ba68a0ba6?auto=format&fit=crop&w=1200&q=85"
+                "https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?auto=format&fit=crop&w=1200&q=85",
+                "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=1200&q=85"
             }),
-        New RoomShowcaseItem("Junior Suite", "A generous open-plan retreat with room for both sleeping and relaxing.",
+        New RoomShowcaseItem("Junior Suite", "A suite-style accommodation with a more open feel and space designed for sleeping and lounging.",
             "Bedroom and lounge feel", "Sofa or lounge seating", "Expanded floor space",
             New String() {
                 "https://images.unsplash.com/photo-1600607687644-c7171b42498f?auto=format&fit=crop&w=1200&q=85",
                 "https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?auto=format&fit=crop&w=1200&q=85",
-                "https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=1200&q=85"
+                "https://images.unsplash.com/photo-1564501049412-61c2a3083791?auto=format&fit=crop&w=1200&q=85"
             }),
-        New RoomShowcaseItem("Presidential Suite", "An expansive signature accommodation with distinct living and sleeping spaces.",
+        New RoomShowcaseItem("Presidential Suite", "The highest room category, presented with grander interiors, distinct living spaces, and an upscale suite aesthetic.",
             "Separate living area", "Premium suite styling", "Spacious entertaining area",
             New String() {
-                "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=1200&q=85",
                 "https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&w=1200&q=85",
-                "https://images.unsplash.com/photo-1582719508461-905c673771fd?auto=format&fit=crop&w=1200&q=85"
+                "https://images.unsplash.com/photo-1571896349842-33c89424de2d?auto=format&fit=crop&w=1200&q=85",
+                "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=1200&q=85"
             })
     }
 
