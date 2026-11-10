@@ -879,7 +879,7 @@ Public Class ReservationsForm
 
         btnViewArchived = CreateButton(
             "Show Archived",
-            New Point(890, 114),
+            New Point(1010, 114),
             New Size(150, 36),
             Sage
         )
