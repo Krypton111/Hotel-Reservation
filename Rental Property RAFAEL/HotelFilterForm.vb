@@ -124,8 +124,14 @@ Public Class HotelFilterForm
         Me.Controls.Add(footer)
         Me.Controls.Add(header)
 
-        Dim fields As IEnumerable(Of String) =
-            If(fieldNames Is Nothing, sourceTable.Columns.Cast(Of DataColumn)().Select(Function(c) c.ColumnName), fieldNames)
+        Dim fields As New List(Of String)()
+        If fieldNames Is Nothing Then
+            For Each column As DataColumn In sourceTable.Columns
+                fields.Add(column.ColumnName)
+            Next
+        Else
+            fields.AddRange(fieldNames)
+        End If
 
         For Each fieldName As String In fields
             If sourceTable.Columns.Contains(fieldName) Then
