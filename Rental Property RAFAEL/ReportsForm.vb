@@ -59,6 +59,7 @@ Public Class ReportsForm
     Private refreshButton As Button
     Private exportButton As Button
     Private closeButton As Button
+    Private filterButton As Button
 
     Private reportGrid As DataGridView
 
@@ -377,9 +378,17 @@ Public Class ReportsForm
         )
 
 
+        filterButton = New Button With {
+            .Location = New Point(735, 15),
+            .Size = New Size(110, 38)
+        }
+        HotelFilterForm.StyleFilterButton(filterButton)
+        AddHandler filterButton.Click, AddressOf FilterButton_Click
+        toolbarPanel.Controls.Add(filterButton)
+
         closeButton = CreateButton(
             "Close",
-            New Point(620, 15),
+            New Point(860, 15),
             New Size(100, 38),
             Color.FromArgb(108, 105, 98)
         )
@@ -1200,6 +1209,30 @@ Public Class ReportsForm
     End Sub
 
     '===========================================================
+    '===========================================================
+    ' ADVANCED REPORT FILTER
+    '===========================================================
+
+    Private Sub FilterButton_Click(sender As Object, e As EventArgs)
+        Dim table As DataTable = HotelFilterForm.GetSourceTable(reportGrid.DataSource)
+        If table Is Nothing Then Return
+
+        Using dialog As New HotelFilterForm(table, "Filter " & reportTypeComboBox.Text)
+            If dialog.ShowDialog(Me) <> DialogResult.OK Then Return
+
+            table.DefaultView.RowFilter = dialog.FilterExpression
+            reportGrid.DataSource = table.DefaultView
+            FormatGrid()
+
+            If dialog.FilterExpression = String.Empty Then
+                statusLabel.Text = "All records are displayed for this report."
+            Else
+                statusLabel.Text = "Report filters applied to the displayed records."
+            End If
+        End Using
+    End Sub
+
+
     ' LOAD GRID
     '===========================================================
 
