@@ -933,20 +933,41 @@ Public Class GuestsForm
     '==========================================================
 
     Private Sub FilterButton_Click(sender As Object, e As EventArgs)
-        Dim table As DataTable = HotelFilterForm.GetSourceTable(dgvGuests.DataSource)
+
+        Dim table As DataTable =
+        HotelFilterForm.GetSourceTable(dgvGuests.DataSource)
+
         If table Is Nothing Then Return
 
         Dim fields As String() = {
-            "FullName", "FirstName", "LastName", "ContactNumber",
-            "Email", "Address", "City", "Country"
-        }
+        "FullName",
+        "FirstName",
+        "LastName",
+        "ContactNumber",
+        "Email",
+        "Address",
+        "City",
+        "Country"
+    }
 
-        Using dialog As New HotelFilterForm(table, "Filter Guests", fields)
-            If dialog.ShowDialog(Me) <> DialogResult.OK Then Return
-            table.DefaultView.RowFilter = dialog.FilterExpression
-            dgvGuests.DataSource = table.DefaultView
-            FormatGrid()
+        Using dialog As New HotelFilterForm(
+        table,
+        "Filter Guests",
+        fields
+    )
+
+            If dialog.ShowDialog(Me) <> DialogResult.OK Then
+                Return
+            End If
+
+            table.DefaultView.RowFilter =
+            dialog.FilterExpression
+
+            dgvGuests.DataSource =
+            table.DefaultView
+
         End Using
+
     End Sub
 
 
