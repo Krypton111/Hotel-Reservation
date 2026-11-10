@@ -28,6 +28,7 @@ Public Class GuestsForm
     Private viewingArchived As Boolean = False
     Private btnClear As Button
     Private btnSearch As Button
+    Private btnFilter As Button
     Private btnClose As Button
 
     Private dgvGuests As DataGridView
@@ -495,6 +496,14 @@ Public Class GuestsForm
             btnSearch
         )
 
+        btnFilter = New Button With {
+            .Location = New Point(625, 7),
+            .Size = New Size(110, 38)
+        }
+        HotelFilterForm.StyleFilterButton(btnFilter)
+        AddHandler btnFilter.Click, AddressOf FilterButton_Click
+        searchPanel.Controls.Add(btnFilter)
+
         '======================================================
         ' DATA GRID
         '======================================================
@@ -919,6 +928,28 @@ Public Class GuestsForm
     End Sub
 
     '==========================================================
+    '==========================================================
+    ' ADVANCED GUEST FILTER
+    '==========================================================
+
+    Private Sub FilterButton_Click(sender As Object, e As EventArgs)
+        Dim table As DataTable = HotelFilterForm.GetSourceTable(dgvGuests.DataSource)
+        If table Is Nothing Then Return
+
+        Dim fields As String() = {
+            "FullName", "FirstName", "LastName", "ContactNumber",
+            "Email", "Address", "City", "Country"
+        }
+
+        Using dialog As New HotelFilterForm(table, "Filter Guests", fields)
+            If dialog.ShowDialog(Me) <> DialogResult.OK Then Return
+            table.DefaultView.RowFilter = dialog.FilterExpression
+            dgvGuests.DataSource = table.DefaultView
+            FormatGrid()
+        End Using
+    End Sub
+
+
     ' LOAD GUESTS
     '==========================================================
 
