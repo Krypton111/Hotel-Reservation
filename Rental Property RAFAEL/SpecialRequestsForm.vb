@@ -59,10 +59,15 @@ Public Class SpecialRequestsForm
             editor.Controls.Add(MakeLabel("Request details *", 18, 67))
             txtDetails = New TextBox With {.Location = New Point(18, 89), .Size = New Size(680, 58), .Multiline = True, .MaxLength = 1000, .Anchor = AnchorStyles.Top Or AnchorStyles.Left Or AnchorStyles.Right}
             editor.Controls.Add(txtDetails)
-            btnCreate = MakeButton("CREATE REQUEST", 720, 95, gold)
+            btnCreate = MakeButton("SUBMIT REQUEST", 0, 95, gold)
+            btnCreate.Size = New Size(190, 42)
             btnCreate.Anchor = AnchorStyles.Top Or AnchorStyles.Right
             AddHandler btnCreate.Click, AddressOf CreateRequest
+            AddHandler editor.Resize, Sub(sender, args)
+                                          btnCreate.Left = Math.Max(18, editor.ClientSize.Width - btnCreate.Width - 18)
+                                      End Sub
             editor.Controls.Add(btnCreate)
+            btnCreate.Left = Math.Max(18, editor.ClientSize.Width - btnCreate.Width - 18)
         Else
             editor.Controls.Add(MakeLabel("Selected request status", 18, 12))
             cboStatus = New ComboBox With {.Location = New Point(18, 38), .Size = New Size(220, 28), .DropDownStyle = ComboBoxStyle.DropDownList}
@@ -102,7 +107,7 @@ Public Class SpecialRequestsForm
         }
         root.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 100.0F))
         root.RowStyles.Add(New RowStyle(SizeType.Absolute, 82.0F))
-        root.RowStyles.Add(New RowStyle(SizeType.Absolute, If(isStaff, 82.0F, 178.0F)))
+        root.RowStyles.Add(New RowStyle(SizeType.Absolute, If(isStaff, 82.0F, 190.0F)))
         root.RowStyles.Add(New RowStyle(SizeType.Percent, 100.0F))
         root.Controls.Add(header, 0, 0)
         root.Controls.Add(editor, 0, 1)
